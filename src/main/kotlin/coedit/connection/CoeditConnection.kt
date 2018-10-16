@@ -17,23 +17,29 @@ class CoeditConnection {
 
 
     fun startServer() {
-        serverSocket = ServerSocket(port)
-        clientSocket = serverSocket?.accept()
+        Thread(Runnable {
+            serverSocket = ServerSocket(port)
+            clientSocket = serverSocket?.accept()
 
-        if (clientSocket == null) {
-            throw RuntimeException("Client socket is null")
-        }
-        val reader = BufferedReader(InputStreamReader(clientSocket?.getInputStream()))
+            if (clientSocket == null) {
+                throw RuntimeException("Client socket is null")
+            }
+            val reader = BufferedReader(InputStreamReader(clientSocket?.getInputStream()))
 
-        serverSocket.use { _ ->
-            clientSocket.use { _ ->
-                reader.use {
-                    while (true) {
-                        val line = it.readLine() ?: break
-                        println(line)
+            serverSocket.use { _ ->
+                clientSocket.use { _ ->
+                    reader.use {
+                        var inputLine: String
+                        while (true) {
+                            inputLine = it.readLine()
+                            if (inputLine == null) {
+                                break;
+                            }
+                            println(inputLine)
+                        }
                     }
                 }
             }
-        }
+        }).start()
     }
 }

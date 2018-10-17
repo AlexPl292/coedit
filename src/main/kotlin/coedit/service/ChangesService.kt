@@ -1,10 +1,7 @@
 package coedit.service
 
 import coedit.CoeditPlugin
-import coedit.connection.protocol.CoRequest
-import coedit.connection.protocol.CoRequestFileCreation
-import coedit.connection.protocol.CoRequestFileEdit
-import coedit.connection.protocol.CoResponse
+import coedit.connection.protocol.*
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -20,6 +17,7 @@ class ChangesService(private val project: Project) {
         return when (change) {
             is CoRequestFileCreation -> createFile(change)
             is CoRequestFileEdit -> editFile(change)
+            is CoRequestTryLock -> tryLock(change)
             else -> CoResponse.ERROR
         }
     }
@@ -48,6 +46,11 @@ class ChangesService(private val project: Project) {
             document?.insertString(change.patch.offset, change.patch.newString)
         }
 
+        return CoResponse.OK
+    }
+
+    private fun tryLock(change: CoRequestTryLock): CoResponse {
+        CoeditPlugin.getInstance(project).lockForEdit(change.filePath)
         return CoResponse.OK
     }
 }

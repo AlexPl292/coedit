@@ -9,7 +9,6 @@ import java.util.*
 
 interface CoRequest : Serializable
 
-
 data class CoRequestFileCreation(
         val filePath: String,
         val data: ByteArray
@@ -42,4 +41,8 @@ data class CoPatch(
 data class CoRequestFileEdit(
         val filePath: String,
         val patch: CoPatch
+) : CoRequest
+
+data class CoRequestTryLock(
+        val filePath: String
 ) : CoRequest

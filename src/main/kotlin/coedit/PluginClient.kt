@@ -3,6 +3,7 @@ package coedit
 import coedit.connection.protocol.CoPatch
 import coedit.connection.protocol.CoRequestFileCreation
 import coedit.connection.protocol.CoRequestFileEdit
+import coedit.connection.protocol.CoRequestTryLock
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.Socket
@@ -36,7 +37,22 @@ fun changeFile() {
     val host = "localhost"
     val port = 8089
 
-    val changeFile = CoRequestFileEdit("Test.java", CoPatch(5, "DDD"))
+    val changeFile = CoRequestFileEdit("Test.java", CoPatch(5, "AAA"))
+
+    Socket(host, port).use { echoSocket ->
+        ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->
+            ObjectInputStream(echoSocket.getInputStream()).use { inStream ->
+                objectStream.writeObject(changeFile)
+            }
+        }
+    }
+}
+
+fun tryLock() {
+    val host = "localhost"
+    val port = 8089
+
+    val changeFile = CoRequestTryLock("Test.java")
 
     Socket(host, port).use { echoSocket ->
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->

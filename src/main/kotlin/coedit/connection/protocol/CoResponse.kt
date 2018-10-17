@@ -10,5 +10,6 @@ data class CoResponse(
 ) : Serializable {
     companion object {
         val OK = CoResponse(200)
+        val ERROR = CoResponse(500)
     }
 }

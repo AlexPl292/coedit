@@ -1,10 +1,9 @@
 package coedit.service
 
 import coedit.CoeditPlugin
-import coedit.connection.protocol.ChangeType
-import coedit.connection.protocol.CoRequest
-import coedit.connection.protocol.CoRequestBodyFileCreation
-import coedit.connection.protocol.CoResponse
+import coedit.connection.protocol.*
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 
@@ -14,12 +13,16 @@ import com.intellij.openapi.vfs.LocalFileSystem
 
 class ChangesService(private val project: Project) {
     fun handleChange(change: CoRequest): CoResponse {
-        return when (change.changeType) {
-            ChangeType.CREATE_FILE -> createFile(change.requestBody as CoRequestBodyFileCreation)
+        // FIXME Not Open-closed principle
+        return when (change) {
+            is CoRequestFileCreation -> createFile(change)
+            is CoRequestFileEdit -> editFile(change)
+            is CoRequestTryLock -> tryLock(change)
+            else -> CoResponse.ERROR
         }
     }
 
-    private fun createFile(change: CoRequestBodyFileCreation): CoResponse {
+    private fun createFile(change: CoRequestFileCreation): CoResponse {
         val coeditPlugin = CoeditPlugin.getInstance(project)
         val parentPath = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)
                 ?: throw RuntimeException("Cannot access base directory")
@@ -27,6 +30,28 @@ class ChangesService(private val project: Project) {
         val newFile = parentPath.findOrCreateChildData(project, change.filePath)
         newFile.setBinaryContent(change.data)
         coeditPlugin.lockForEdit(change.filePath)
+        return CoResponse.OK
+    }
+
+    private fun editFile(change: CoRequestFileEdit): CoResponse {
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        val parentPath = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)
+                ?: throw RuntimeException("Cannot access base directory")
+
+        val newFile = parentPath.findChild(change.filePath) ?: throw RuntimeException("Cannot read file")
+
+        val document = FileDocumentManager.getInstance().getDocument(newFile)
+
+        WriteCommandAction.runWriteCommandAction(project) {
+            document?.deleteString(change.patch.offset, change.patch.oldLength)
+            document?.insertString(change.patch.offset, change.patch.newString)
+        }
+
+        return CoResponse.OK
+    }
+
+    private fun tryLock(change: CoRequestTryLock): CoResponse {
+        CoeditPlugin.getInstance(project).lockForEdit(change.filePath)
         return CoResponse.OK
     }
 }

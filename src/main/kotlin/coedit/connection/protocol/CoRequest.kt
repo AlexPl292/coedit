@@ -7,25 +7,19 @@ import java.util.*
  * Created by Alex Plate on 17.10.2018.
  */
 
-enum class ChangeType {
-    CREATE_FILE, EDIT_FILE
-}
+interface CoRequest : Serializable
 
-data class CoRequest(
-        val changeType: ChangeType,
-        val requestBody: CoRequestBody
-) : Serializable
 
-interface CoRequestBody : Serializable
-data class CoRequestBodyFileCreation(
+data class CoRequestFileCreation(
         val filePath: String,
         val data: ByteArray
-) : CoRequestBody {
+) : CoRequest {
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as CoRequestBodyFileCreation
+        other as CoRequestFileCreation
 
         if (filePath != other.filePath) return false
         if (!Arrays.equals(data, other.data)) return false
@@ -45,7 +39,7 @@ data class CoPatch(
         val newString: String
 ) : Serializable
 
-data class CoRequestBodyFileEdit(
+data class CoRequestFileEdit(
         val filePath: String,
         val patch: CoPatch
-) : CoRequestBody
+) : CoRequest

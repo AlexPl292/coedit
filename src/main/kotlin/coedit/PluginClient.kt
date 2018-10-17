@@ -23,7 +23,7 @@ fun createFile() {
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->
             ObjectInputStream(echoSocket.getInputStream()).use { inStream ->
                 objectStream.writeObject(CoRequest(ChangeType.CREATE_FILE, testFile))
-                var readObject = inStream.readObject()
+                val readObject = inStream.readObject()
                 println(readObject)
             }
         }
@@ -34,7 +34,7 @@ fun changeFile() {
     val host = "localhost"
     val port = 8089
 
-    val changeFile = CoRequestBodyFileEdit("Test.java", CoPatch(5, "XXX"))
+    val changeFile = CoRequestBodyFileEdit("Test.java", CoPatch(5, "DDD"))
 
     Socket(host, port).use { echoSocket ->
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->

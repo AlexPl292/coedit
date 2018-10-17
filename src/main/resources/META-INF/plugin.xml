@@ -19,7 +19,10 @@
     </extensions>
 
     <actions>
-        <!-- Add your actions here -->
+        <group id="coedit.menu" text="CoEdit">
+            <add-to-group group-id="MainMenu" anchor="last"/>
+            <action id="coedit.action.StartServer" class="coedit.action.StartServer" text="Start server" description="start server"/>
+        </group>
     </actions>
     <project-components>
         <component>

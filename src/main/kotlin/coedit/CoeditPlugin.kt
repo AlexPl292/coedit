@@ -8,9 +8,9 @@ import com.intellij.openapi.project.Project
  * Created by Alex Plate on 16.10.2018.
  */
 
-class CoeditPlugin : ProjectComponent {
+class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
-    private val conn: CoeditConnection = CoeditConnection()
+    private val myConn: CoeditConnection = CoeditConnection()
 
     companion object {
         fun getInstance(project: Project): CoeditPlugin {
@@ -19,6 +19,6 @@ class CoeditPlugin : ProjectComponent {
     }
 
     override fun projectOpened() {
-        conn.startServer()
+        myConn.startServer()
     }
 }

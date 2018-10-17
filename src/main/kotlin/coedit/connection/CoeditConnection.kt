@@ -11,23 +11,23 @@ import java.net.Socket
 
 class CoeditConnection {
 
-    private val port = 8089
-    private var serverSocket: ServerSocket? = null
-    private var clientSocket: Socket? = null
+    private val myPort = 8089
+    private var myServerSocket: ServerSocket? = null
+    private var myClientSocket: Socket? = null
 
 
     fun startServer() {
         Thread(Runnable {
-            serverSocket = ServerSocket(port)
-            clientSocket = serverSocket?.accept()
+            myServerSocket = ServerSocket(myPort)
+            myClientSocket = myServerSocket?.accept()
 
-            if (clientSocket == null) {
+            if (myClientSocket == null) {
                 throw RuntimeException("Client socket is null")
             }
-            val reader = BufferedReader(InputStreamReader(clientSocket?.getInputStream()))
+            val reader = BufferedReader(InputStreamReader(myClientSocket?.getInputStream()))
 
-            serverSocket.use { _ ->
-                clientSocket.use { _ ->
+            myServerSocket.use { _ ->
+                myClientSocket.use { _ ->
                     reader.use {
                         var inputLine: String
                         while (true) {

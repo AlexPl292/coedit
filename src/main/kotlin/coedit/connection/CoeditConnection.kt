@@ -4,6 +4,7 @@ import coedit.model.CoChangeProtocol
 import coedit.service.ChangesService
 import com.intellij.openapi.project.Project
 import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.net.ServerSocket
 import java.net.Socket
 
@@ -29,13 +30,17 @@ class CoeditConnection {
                 throw RuntimeException("Client socket is null")
             }
             val objectInputStream = ObjectInputStream(myClientSocket?.getInputStream())
+            val objectOutputStream = ObjectOutputStream(myClientSocket?.getOutputStream())
 
             myServerSocket.use { _ ->
                 myClientSocket.use { _ ->
-                    objectInputStream.use {
-                        while (true) {
-                            val request: CoChangeProtocol = objectInputStream.readObject() as CoChangeProtocol
-                            changesService.handleChange(request)
+                    objectInputStream.use { inStream ->
+                        objectOutputStream.use { outStream ->
+                            while (true) {
+                                val request = inStream.readObject() as CoChangeProtocol
+                                val coResponse = changesService.handleChange(request)
+                                outStream.writeObject(coResponse)
+                            }
                         }
                     }
                 }

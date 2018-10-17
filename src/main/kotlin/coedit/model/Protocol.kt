@@ -11,12 +11,20 @@ enum class ChangeType {
     CREATE_FILE
 }
 
+interface CoRequest : Serializable
+
+data class CoResponse(
+        val code: Int
+) : Serializable {
+    companion object {
+        val OK = CoResponse(200)
+    }
+}
+
 data class CoChangeProtocol(
         val changeType: ChangeType,
         val request: CoRequest
 ) : Serializable
-
-interface CoRequest : Serializable
 
 data class CoRequestFileCreation(
         val filePath: String,

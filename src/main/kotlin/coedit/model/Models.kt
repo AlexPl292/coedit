@@ -1,5 +1,6 @@
 package coedit.model
 
+import java.io.Serializable
 import java.util.*
 
 /**
@@ -14,7 +15,7 @@ data class CoChange(
         val changeType: ChangeType,
         val filePath: String,
         val data: ByteArray
-) {
+) : Serializable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

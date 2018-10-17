@@ -4,6 +4,7 @@ import coedit.connection.CoeditConnection
 import coedit.model.LockState
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 
 /**
  * Created by Alex Plate on 16.10.2018.
@@ -30,6 +31,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     }
 
     fun lockForEdit(file: String) {
+        LocalFileSystem.getInstance().findFileByPath(myBasePath)?.findChild(file)?.isWritable = false
         locks[file] = LockState.LOCKED_FOR_EDIT
     }
 }

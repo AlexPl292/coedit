@@ -39,7 +39,9 @@ class ChangesService(private val project: Project) {
 
         val document = FileDocumentManager.getInstance().getDocument(newFile)
 
-        WriteCommandAction.runWriteCommandAction(project) { document?.insertString(0, "ABC") }
+        WriteCommandAction.runWriteCommandAction(project) {
+            document?.insertString(change.patch.offset, change.patch.newString)
+        }
 
         return CoResponse.OK
     }

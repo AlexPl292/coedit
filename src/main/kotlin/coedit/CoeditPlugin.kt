@@ -1,9 +1,16 @@
 package coedit
 
 import coedit.connection.CoeditConnection
+import coedit.listener.ChangeListener
+import coedit.listener.InitListener
 import coedit.model.LockState
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 
 /**
  * Created by Alex Plate on 16.10.2018.
@@ -23,6 +30,19 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
     override fun projectOpened() {
         myConn.startServer(myProject)
+        val connection = ApplicationManager.getApplication().messageBus.connect()
+        connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
+            val listener = InitListener()
+
+            override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+                FileDocumentManager.getInstance().getDocument(file)?.addDocumentListener(listener)
+            }
+
+            override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+                FileDocumentManager.getInstance().getDocument(file)?.removeDocumentListener(listener)
+                FileDocumentManager.getInstance().getDocument(file)?.removeDocumentListener(ChangeListener())
+            }
+        })
     }
 
     fun lockByMe(file: String) {

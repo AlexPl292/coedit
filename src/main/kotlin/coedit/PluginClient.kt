@@ -1,8 +1,8 @@
 package coedit
 
-import coedit.model.ChangeType
-import coedit.model.CoChangeProtocol
-import coedit.model.CoRequestFileCreation
+import coedit.connection.protocol.ChangeType
+import coedit.connection.protocol.CoRequest
+import coedit.connection.protocol.CoRequestBodyFileCreation
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.Socket
@@ -20,12 +20,12 @@ fun createFile() {
     val host = "localhost"
     val port = 8089
 
-    val testFile = CoRequestFileCreation("Test", "TestData".toByteArray())
+    val testFile = CoRequestBodyFileCreation("Test", "TestData".toByteArray())
 
     Socket(host, port).use { echoSocket ->
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->
             ObjectInputStream(echoSocket.getInputStream()).use { inStream ->
-                objectStream.writeObject(CoChangeProtocol(ChangeType.CREATE_FILE, testFile))
+                objectStream.writeObject(CoRequest(ChangeType.CREATE_FILE, testFile))
                 val readObject = inStream.readObject()
                 println(readObject)
             }

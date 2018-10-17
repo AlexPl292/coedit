@@ -1,4 +1,4 @@
-package coedit.model
+package coedit.connection.protocol
 
 import java.io.Serializable
 import java.util.*
@@ -11,30 +11,21 @@ enum class ChangeType {
     CREATE_FILE
 }
 
-interface CoRequest : Serializable
-
-data class CoResponse(
-        val code: Int
-) : Serializable {
-    companion object {
-        val OK = CoResponse(200)
-    }
-}
-
-data class CoChangeProtocol(
+data class CoRequest(
         val changeType: ChangeType,
-        val request: CoRequest
+        val requestBody: CoRequestBody
 ) : Serializable
 
-data class CoRequestFileCreation(
+interface CoRequestBody : Serializable
+data class CoRequestBodyFileCreation(
         val filePath: String,
         val data: ByteArray
-) : CoRequest {
+) : CoRequestBody {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as CoRequestFileCreation
+        other as CoRequestBodyFileCreation
 
         if (filePath != other.filePath) return false
         if (!Arrays.equals(data, other.data)) return false

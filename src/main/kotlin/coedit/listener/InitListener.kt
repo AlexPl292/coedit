@@ -1,34 +1,26 @@
 package coedit.listener
 
+import coedit.CoeditPlugin
+import coedit.connection.protocol.CoRequestTryLock
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.vfs.VfsUtilCore
 
 /**
  * Created by Alex Plate on 17.10.2018.
  */
-class InitListener : DocumentListener, CoListener {
+class InitListener(val project: Project) : DocumentListener, CoListener {
+    override val name: String
+        get() = "InitListener"
 
-    override fun getName(): String {
-        return "InitListener"
-    }
+    override fun beforeDocumentChange(event: DocumentEvent?) {
+        var file = FileDocumentManager.getInstance().getFile(event?.document!!)
+        var root = ProjectFileIndex.getInstance(project).getContentRootForFile(file!!)
+        var relativePath = VfsUtilCore.getRelativePath(file, root!!)
 
-    override fun documentChanged(event: DocumentEvent?) {
-        // Request auth
-        println("U")
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as InitListener
-
-        if (getName() != other.getName()) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return getName().hashCode()
+        CoeditPlugin.getInstance(project).myConn.send(CoRequestTryLock(relativePath!!))
     }
 }

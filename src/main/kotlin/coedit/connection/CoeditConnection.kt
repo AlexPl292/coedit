@@ -15,8 +15,12 @@ import java.net.Socket
 class CoeditConnection {
 
     private val myPort = 8089
+    private val myHost = "localhost"
     private var myServerSocket: ServerSocket? = null
     private var myClientSocket: Socket? = null
+
+    private var objectOutputStream: ObjectOutputStream? = null
+    private var objectInputStream: ObjectInputStream? = null
 
 
     fun startServer(project: Project) {
@@ -46,5 +50,16 @@ class CoeditConnection {
                 }
             }
         }).start()
+    }
+
+    fun connectToServer(project: Project) {
+        val socket = Socket(myHost, myPort)
+
+        objectOutputStream = ObjectOutputStream(socket.getOutputStream())
+        objectInputStream = ObjectInputStream(socket.getInputStream())
+    }
+
+    fun send(request: CoRequest) {
+        objectOutputStream?.writeObject(request)
     }
 }

@@ -24,19 +24,6 @@ class CoeditPlugin(myProject: Project) : ProjectComponent {
     }
 
     override fun projectOpened() {
-/*        val connection = ApplicationManager.getApplication().messageBus.connect()
-        connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
-            val listener = InitListener()
-
-            override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
-                FileDocumentManager.getInstance().getDocument(file)?.addDocumentListener(listener)
-            }
-
-            override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
-                FileDocumentManager.getInstance().getDocument(file)?.removeDocumentListener(listener)
-                FileDocumentManager.getInstance().getDocument(file)?.removeDocumentListener(ChangeListener())
-            }
-        })*/
     }
 
     fun lockByMe(file: String) {

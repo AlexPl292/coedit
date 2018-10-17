@@ -11,17 +11,15 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.VirtualFile
 
-
 /**
  * Created by Alex Plate on 17.10.2018.
  */
-class StartServer : AnAction("StartServer") {
+class ConnectToServer : AnAction("ConnectToServer") {
     override fun actionPerformed(e: AnActionEvent?) {
         val project = e?.project
 
         val connection = CoeditPlugin.getInstance(project!!).myConn
-        connection.startServer(project)
-
+        connection.connectToServer(project)
         val messageBus = ApplicationManager.getApplication().messageBus.connect()
         messageBus.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
             val listener = InitListener(project)
@@ -35,6 +33,6 @@ class StartServer : AnAction("StartServer") {
             }
         })
 
-        Messages.showMessageDialog(project, "Server started", "Greeting", Messages.getInformationIcon())
+        Messages.showMessageDialog(project, "Connected to server", "Greeting", Messages.getInformationIcon())
     }
 }

@@ -1,6 +1,6 @@
 package coedit.connection
 
-import coedit.model.CoChange
+import coedit.model.CoChangeProtocol
 import coedit.service.ChangesService
 import com.intellij.openapi.project.Project
 import java.io.ObjectInputStream
@@ -34,8 +34,8 @@ class CoeditConnection {
                 myClientSocket.use { _ ->
                     objectInputStream.use {
                         while (true) {
-                            val change: CoChange = objectInputStream.readObject() as CoChange
-                            changesService.handleChange(change)
+                            val request: CoChangeProtocol = objectInputStream.readObject() as CoChangeProtocol
+                            changesService.handleChange(request)
                         }
                     }
                 }

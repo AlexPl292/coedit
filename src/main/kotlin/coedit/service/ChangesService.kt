@@ -2,7 +2,8 @@ package coedit.service
 
 import coedit.CoeditPlugin
 import coedit.model.ChangeType
-import coedit.model.CoChange
+import coedit.model.CoChangeProtocol
+import coedit.model.CoRequestFileCreation
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 
@@ -11,13 +12,13 @@ import com.intellij.openapi.vfs.LocalFileSystem
  */
 
 class ChangesService(private val project: Project) {
-    fun handleChange(change: CoChange) {
+    fun handleChange(change: CoChangeProtocol) {
         when (change.changeType) {
-            ChangeType.CREATE_FILE -> createFile(change)
+            ChangeType.CREATE_FILE -> createFile(change.request as CoRequestFileCreation)
         }
     }
 
-    private fun createFile(change: CoChange) {
+    private fun createFile(change: CoRequestFileCreation) {
         val parentPath = LocalFileSystem.getInstance().findFileByPath(CoeditPlugin.getInstance(project).myBasePath)
                 ?: throw RuntimeException("Cannot access base directory")
 

@@ -11,18 +11,23 @@ enum class ChangeType {
     CREATE_FILE
 }
 
-data class CoChange(
+data class CoChangeProtocol(
         val changeType: ChangeType,
+        val request: CoRequest
+) : Serializable
+
+interface CoRequest : Serializable
+
+data class CoRequestFileCreation(
         val filePath: String,
         val data: ByteArray
-) : Serializable {
+) : CoRequest {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as CoChange
+        other as CoRequestFileCreation
 
-        if (changeType != other.changeType) return false
         if (filePath != other.filePath) return false
         if (!Arrays.equals(data, other.data)) return false
 
@@ -30,9 +35,9 @@ data class CoChange(
     }
 
     override fun hashCode(): Int {
-        var result = changeType.hashCode()
-        result = 31 * result + filePath.hashCode()
+        var result = filePath.hashCode()
         result = 31 * result + Arrays.hashCode(data)
         return result
     }
 }
+

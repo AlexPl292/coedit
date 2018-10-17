@@ -1,7 +1,10 @@
 package coedit.connection
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import coedit.connection.protocol.CoRequest
+import coedit.service.ChangesService
+import com.intellij.openapi.project.Project
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.net.ServerSocket
 import java.net.Socket
 
@@ -16,26 +19,28 @@ class CoeditConnection {
     private var myClientSocket: Socket? = null
 
 
-    fun startServer() {
+    fun startServer(project: Project) {
         Thread(Runnable {
+            val changesService = ChangesService(project)
+
             myServerSocket = ServerSocket(myPort)
             myClientSocket = myServerSocket?.accept()
 
             if (myClientSocket == null) {
                 throw RuntimeException("Client socket is null")
             }
-            val reader = BufferedReader(InputStreamReader(myClientSocket?.getInputStream()))
+            val objectInputStream = ObjectInputStream(myClientSocket?.getInputStream())
+            val objectOutputStream = ObjectOutputStream(myClientSocket?.getOutputStream())
 
             myServerSocket.use { _ ->
                 myClientSocket.use { _ ->
-                    reader.use {
-                        var inputLine: String
-                        while (true) {
-                            inputLine = it.readLine()
-                            if (inputLine == null) {
-                                break;
+                    objectInputStream.use { inStream ->
+                        objectOutputStream.use { outStream ->
+                            while (true) {
+                                val request = inStream.readObject() as CoRequest
+                                val coResponse = changesService.handleChange(request)
+                                outStream.writeObject(coResponse)
                             }
-                            println(inputLine)
                         }
                     }
                 }

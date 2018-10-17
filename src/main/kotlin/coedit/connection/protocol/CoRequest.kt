@@ -35,6 +35,7 @@ data class CoRequestFileCreation(
 
 data class CoPatch(
         val offset: Int,
+        val oldLength: Int,
         val newString: String
 ) : Serializable
 

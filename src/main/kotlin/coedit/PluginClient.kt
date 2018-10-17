@@ -37,7 +37,7 @@ fun changeFile() {
     val host = "localhost"
     val port = 8089
 
-    val changeFile = CoRequestFileEdit("Test.java", CoPatch(5, "AAA"))
+    val changeFile = CoRequestFileEdit("Test.java", CoPatch(5, 6, "AAA"))
 
     Socket(host, port).use { echoSocket ->
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->

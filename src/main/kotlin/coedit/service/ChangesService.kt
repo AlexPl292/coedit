@@ -43,6 +43,7 @@ class ChangesService(private val project: Project) {
         val document = FileDocumentManager.getInstance().getDocument(newFile)
 
         WriteCommandAction.runWriteCommandAction(project) {
+            document?.deleteString(change.patch.offset, change.patch.oldLength)
             document?.insertString(change.patch.offset, change.patch.newString)
         }
 

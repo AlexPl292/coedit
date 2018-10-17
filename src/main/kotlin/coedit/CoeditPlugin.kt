@@ -11,6 +11,7 @@ import com.intellij.openapi.project.Project
 class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
     private val myConn: CoeditConnection = CoeditConnection()
+    val myBasePath = myProject.basePath ?: throw RuntimeException("Cannot detect base path of project")
 
     companion object {
         fun getInstance(project: Project): CoeditPlugin {
@@ -19,6 +20,6 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     }
 
     override fun projectOpened() {
-        myConn.startServer()
+        myConn.startServer(myProject)
     }
 }

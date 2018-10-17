@@ -19,10 +19,12 @@ class ChangesService(private val project: Project) {
     }
 
     private fun createFile(change: CoRequestFileCreation) {
-        val parentPath = LocalFileSystem.getInstance().findFileByPath(CoeditPlugin.getInstance(project).myBasePath)
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        val parentPath = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)
                 ?: throw RuntimeException("Cannot access base directory")
 
         val newFile = parentPath.findOrCreateChildData(project, change.filePath)
         newFile.setBinaryContent(change.data)
+        coeditPlugin.lockForEdit(change.filePath)
     }
 }

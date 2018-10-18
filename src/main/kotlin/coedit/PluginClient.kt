@@ -43,6 +43,8 @@ fun changeFile() {
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->
             ObjectInputStream(echoSocket.getInputStream()).use { inStream ->
                 objectStream.writeObject(changeFile)
+                val readObject = inStream.readObject()
+                println(readObject)
             }
         }
     }

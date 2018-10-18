@@ -46,6 +46,8 @@ class ChangesService(private val project: Project) {
             document?.insertString(change.patch.offset, change.patch.newString)
         }
 
+        coeditPlugin.myConn.send(CoResponse.OK)
+
         return CoResponse.OK
     }
 

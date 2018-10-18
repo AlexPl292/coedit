@@ -22,33 +22,20 @@ class CoeditConnection {
     private var objectOutputStream: ObjectOutputStream? = null
     private var objectInputStream: ObjectInputStream? = null
 
-
     fun startServer(project: Project) {
-        Thread(Runnable {
-            val changesService = ChangesService(project)
 
-            myServerSocket = ServerSocket(myPort)
+        myServerSocket = ServerSocket(myPort)
+
+        Thread(Runnable {
             myClientSocket = myServerSocket?.accept()
 
             if (myClientSocket == null) {
                 throw RuntimeException("Client socket is null")
             }
-            val objectInputStream = ObjectInputStream(myClientSocket?.getInputStream())
-            val objectOutputStream = ObjectOutputStream(myClientSocket?.getOutputStream())
+            objectInputStream = ObjectInputStream(myClientSocket?.getInputStream())
+            objectOutputStream = ObjectOutputStream(myClientSocket?.getOutputStream())
 
-            myServerSocket.use { _ ->
-                myClientSocket.use { _ ->
-                    objectInputStream.use { inStream ->
-                        objectOutputStream.use { outStream ->
-                            while (true) {
-                                val request = inStream.readObject() as CoRequest
-                                val coResponse = changesService.handleChange(request)
-                                outStream.writeObject(coResponse)
-                            }
-                        }
-                    }
-                }
-            }
+            startReading(project)
         }).start()
     }
 
@@ -57,9 +44,27 @@ class CoeditConnection {
 
         objectOutputStream = ObjectOutputStream(socket.getOutputStream())
         objectInputStream = ObjectInputStream(socket.getInputStream())
+
+        Thread(Runnable { startReading(project) }).start()
     }
 
-    fun send(request: CoRequest) {
+    fun startReading(project: Project) {
+        val changesService = ChangesService(project)
+        myServerSocket.use { _ ->
+            myClientSocket.use { _ ->
+                objectInputStream.use { inStream ->
+                    objectOutputStream.use { outStream ->
+                        while (true) {
+                            val request = inStream?.readObject() as CoRequest
+                            changesService.handleChange(request)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun send(request: Any) {
         objectOutputStream?.writeObject(request)
     }
 }

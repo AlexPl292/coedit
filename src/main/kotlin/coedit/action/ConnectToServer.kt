@@ -1,7 +1,7 @@
 package coedit.action
 
 import coedit.CoeditPlugin
-import coedit.listener.InitListener
+import coedit.listener.ChangeListener
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
@@ -22,7 +22,7 @@ class ConnectToServer : AnAction("ConnectToServer") {
         connection.connectToServer(project)
         val messageBus = ApplicationManager.getApplication().messageBus.connect()
         messageBus.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
-            val listener = InitListener(project)
+            val listener = ChangeListener(project)
 
             override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
                 FileDocumentManager.getInstance().getDocument(file)?.addDocumentListener(listener)

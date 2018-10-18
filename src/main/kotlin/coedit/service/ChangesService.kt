@@ -12,14 +12,16 @@ import com.intellij.openapi.vfs.LocalFileSystem
  */
 
 class ChangesService(private val project: Project) {
-    fun handleChange(change: CoRequest): CoResponse {
+    fun handleChange(change: CoRequest) {
         // FIXME Not Open-closed principle
-        return when (change) {
+        val response = when (change) {
             is CoRequestFileCreation -> createFile(change)
             is CoRequestFileEdit -> editFile(change)
             is CoRequestTryLock -> tryLock(change)
             else -> CoResponse.ERROR
         }
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        coeditPlugin.myConn.response(response)
     }
 
     private fun createFile(change: CoRequestFileCreation): CoResponse {
@@ -46,13 +48,12 @@ class ChangesService(private val project: Project) {
             document?.insertString(change.patch.offset, change.patch.newString)
         }
 
-        coeditPlugin.myConn.send(CoResponse.OK)
-
         return CoResponse.OK
     }
 
     private fun tryLock(change: CoRequestTryLock): CoResponse {
         CoeditPlugin.getInstance(project).lockForEdit(change.filePath)
+
         return CoResponse.OK
     }
 }

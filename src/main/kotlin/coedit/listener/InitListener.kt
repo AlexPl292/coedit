@@ -3,6 +3,7 @@ package coedit.listener
 import coedit.CoeditPlugin
 import coedit.connection.protocol.CoPatch
 import coedit.connection.protocol.CoRequestFileEdit
+import coedit.connection.protocol.CoRequestTryLock
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -15,13 +16,14 @@ import com.intellij.openapi.vfs.VfsUtilCore
  */
 class InitListener(val project: Project) : DocumentListener, CoListener("InitListener") {
 
-/*    override fun beforeDocumentChange(event: DocumentEvent?) {
+    override fun beforeDocumentChange(event: DocumentEvent?) {
         var file = FileDocumentManager.getInstance().getFile(event?.document!!)
         var root = ProjectFileIndex.getInstance(project).getContentRootForFile(file!!)
         var relativePath = VfsUtilCore.getRelativePath(file, root!!)
+        val contentHashCode = event.document.text.hashCode()
 
-        CoeditPlugin.getInstance(project).myConn.send(CoRequestTryLock(relativePath!!))
-    }*/
+        CoeditPlugin.getInstance(project).myConn.send(CoRequestTryLock(relativePath!!, contentHashCode))
+    }
 
     override fun documentChanged(event: DocumentEvent?) {
         var file = FileDocumentManager.getInstance().getFile(event?.document!!)

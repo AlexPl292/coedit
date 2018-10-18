@@ -52,7 +52,7 @@ fun tryLock() {
     val host = "localhost"
     val port = 8089
 
-    val changeFile = CoRequestTryLock("Test.java")
+    val changeFile = CoRequestTryLock("Test.java", 0)
 
     Socket(host, port).use { echoSocket ->
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->

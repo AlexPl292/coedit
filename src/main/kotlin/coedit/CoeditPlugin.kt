@@ -1,6 +1,7 @@
 package coedit
 
 import coedit.connection.CoeditConnection
+import coedit.connection.protocol.CoRequestFileCreation
 import coedit.listener.ChangeListener
 import coedit.model.LockHandler
 import coedit.model.LockState
@@ -10,6 +11,10 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -49,6 +54,15 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
                 override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
                     Utils.unregisterListener(file, ChangeListener(myProject))
+                }
+            })
+            messageBusConnection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
+                override fun before(events: MutableList<out VFileEvent>) {
+                    events.forEach {
+                        if (it is VFileCreateEvent) {
+                            myConn.send(CoRequestFileCreation(it.path.removePrefix(myBasePath).substring(1), "".toByteArray()))
+                        }
+                    }
                 }
             })
         } catch (e: Throwable) {

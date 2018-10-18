@@ -48,3 +48,7 @@ data class CoRequestTryLock(
         val filePath: String,
         val contentHashCode: Int
 ) : CoRequest
+
+data class CoRequestUnlock(
+        val filePath: String
+) : CoRequest

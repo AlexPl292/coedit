@@ -18,6 +18,7 @@ class ChangesService(private val project: Project) {
             is CoRequestFileCreation -> createFile(change)
             is CoRequestFileEdit -> editFile(change)
             is CoRequestTryLock -> tryLock(change)
+            is CoRequestUnlock -> unlock(change)
             else -> CoResponse.ERROR
         }
         val coeditPlugin = CoeditPlugin.getInstance(project)
@@ -31,7 +32,7 @@ class ChangesService(private val project: Project) {
 
         val newFile = parentPath.findOrCreateChildData(project, change.filePath)
         newFile.setBinaryContent(change.data)
-        coeditPlugin.lockForEdit(change.filePath)
+        coeditPlugin.lockHandler.lockForEdit(change.filePath)
         return CoResponse.OK
     }
 
@@ -52,7 +53,13 @@ class ChangesService(private val project: Project) {
     }
 
     private fun tryLock(change: CoRequestTryLock): CoResponse {
-        CoeditPlugin.getInstance(project).lockForEdit(change.filePath)
+        CoeditPlugin.getInstance(project).lockHandler.lockForEdit(change.filePath)
+
+        return CoResponse.OK
+    }
+
+    private fun unlock(change: CoRequestUnlock): CoResponse {
+        CoeditPlugin.getInstance(project).lockHandler.unlock(change.filePath)
 
         return CoResponse.OK
     }

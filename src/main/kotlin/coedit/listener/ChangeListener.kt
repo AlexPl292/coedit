@@ -23,18 +23,18 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
         var relativePath = VfsUtilCore.getRelativePath(file, root!!)
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
-        if (coeditPlugin.locks[relativePath] == LockState.LOCKED_FOR_EDIT) {
+        if (coeditPlugin.lockHandler.stateOf(relativePath!!) == LockState.LOCKED_FOR_EDIT) {
             event.document.removeDocumentListener(this)
             return
         }
-        if (coeditPlugin.locks[relativePath] != LockState.LOCKED_BY_ME) {
+        if (coeditPlugin.lockHandler.stateOf(relativePath) != LockState.LOCKED_BY_ME) {
             val contentHashCode = event.document.text.hashCode()
 
-            val response = coeditPlugin.myConn.send(CoRequestTryLock(relativePath!!, contentHashCode))
-            coeditPlugin.lockByMe(relativePath)
+            val response = coeditPlugin.myConn.send(CoRequestTryLock(relativePath, contentHashCode))
+            coeditPlugin.lockHandler.lockByMe(relativePath)
         }
 
         val patch = CoPatch(event.offset, event.oldLength, event.newFragment.toString())
-        CoeditPlugin.getInstance(project).myConn.send(CoRequestFileEdit(relativePath!!, patch))
+        CoeditPlugin.getInstance(project).myConn.send(CoRequestFileEdit(relativePath, patch))
     }
 }

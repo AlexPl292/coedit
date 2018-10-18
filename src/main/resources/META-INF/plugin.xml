@@ -25,6 +25,8 @@
                     description="start server"/>
             <action id="coedit.action.ConnectToServer" class="coedit.action.ConnectToServer" text="Connect to server"
                     description="connect to server"/>
+            <action id="coedit.action.StopEditingAction" class="coedit.action.StopEditingAction" text="Stop edit and release lock"
+                    description="stop editing file and release lock"/>
         </group>
     </actions>
     <project-components>

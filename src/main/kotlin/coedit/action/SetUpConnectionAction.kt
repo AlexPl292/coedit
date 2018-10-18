@@ -28,7 +28,7 @@ abstract class SetUpConnectionAction(name: String) : AnAction(name) {
             override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
                 var root = ProjectFileIndex.getInstance(project).getContentRootForFile(file)
                 var relativePath = VfsUtilCore.getRelativePath(file, root!!)
-                if (coeditPlugin.locks[relativePath] == LockState.LOCKED_FOR_EDIT) {
+                if (coeditPlugin.lockHandler.stateOf(relativePath!!) == LockState.LOCKED_FOR_EDIT) {
                     return
                 }
                 FileDocumentManager.getInstance().getDocument(file)?.addDocumentListener(ChangeListener(project))

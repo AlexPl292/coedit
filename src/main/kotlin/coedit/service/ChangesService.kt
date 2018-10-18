@@ -3,6 +3,7 @@ package coedit.service
 import coedit.CoeditPlugin
 import coedit.Utils
 import coedit.connection.protocol.*
+import coedit.model.LockHandler
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -29,41 +30,51 @@ class ChangesService(private val project: Project) {
     private fun createFile(change: CoRequestFileCreation): CoResponse {
         val coeditPlugin = CoeditPlugin.getInstance(project)
         val parentPath = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)
-                ?: throw RuntimeException("Cannot access base directory")
+                ?: return CoResponse.CANNOT_GET_FILE(coeditPlugin.myBasePath)
 
         val newFile = parentPath.findOrCreateChildData(project, change.filePath)
         newFile.setBinaryContent(change.data)
-        coeditPlugin.lockHandler.lockForEdit(change.filePath)
-        return CoResponse.OK
+        val lockForEditStatus = coeditPlugin.lockHandler.lockForEdit(change.filePath)
+        return when (lockForEditStatus) {
+            LockHandler.Status.OK -> CoResponse.OK
+            LockHandler.Status.ALREADY_LOCKED_FOR_EDIT -> CoResponse.LOCK_FILE_ALREADY_LOCKED
+            LockHandler.Status.ALREADY_LOCKED_BY_ME -> CoResponse.CANNOT_LOCK_FILE_ALREADY_LOCKED
+            LockHandler.Status.CANNOT_GET_FILE -> CoResponse.CANNOT_LOCK_FILE_MISSING
+        }
     }
 
     private fun editFile(change: CoRequestFileEdit): CoResponse {
         val coeditPlugin = CoeditPlugin.getInstance(project)
         val parentPath = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)
-                ?: throw RuntimeException("Cannot access base directory")
+                ?: return CoResponse.CANNOT_GET_FILE(coeditPlugin.myBasePath)
 
-        val newFile = parentPath.findChild(change.filePath) ?: throw RuntimeException("Cannot read file")
+        val newFile = parentPath.findChild(change.filePath)
+                ?: return CoResponse.CANNOT_GET_FILE(change.filePath)
 
         WriteCommandAction.runWriteCommandAction(project) {
             val document = FileDocumentManager.getInstance().getDocument(newFile)
-                    ?: throw RuntimeException("Cannot access file")
-            document.replaceString(change.patch.offset, change.patch.offset + change.patch.oldLength, change.patch.newString)
-            Utils.removeAllGuardedBlocks(document)
-            document.createGuardedBlock(0, document.textLength)
+            if (document != null) {
+                // TODO Handle offset problems
+                document.replaceString(change.patch.offset, change.patch.offset + change.patch.oldLength, change.patch.newString)
+                Utils.removeAllGuardedBlocks(document)
+                document.createGuardedBlock(0, document.textLength)
+            }
         }
 
         return CoResponse.OK
     }
 
     private fun tryLock(change: CoRequestTryLock): CoResponse {
-        CoeditPlugin.getInstance(project).lockHandler.lockForEdit(change.filePath)
-
-        return CoResponse.OK
+        val lockForEditStatus = CoeditPlugin.getInstance(project).lockHandler.lockForEdit(change.filePath)
+        return when (lockForEditStatus) {
+            LockHandler.Status.OK -> CoResponse.OK
+            LockHandler.Status.ALREADY_LOCKED_FOR_EDIT -> CoResponse.LOCK_FILE_ALREADY_LOCKED
+            LockHandler.Status.ALREADY_LOCKED_BY_ME -> CoResponse.CANNOT_LOCK_FILE_ALREADY_LOCKED
+            LockHandler.Status.CANNOT_GET_FILE -> CoResponse.CANNOT_LOCK_FILE_MISSING
+        }
     }
 
     private fun unlock(change: CoRequestUnlock): CoResponse {
-        CoeditPlugin.getInstance(project).lockHandler.unlock(change.filePath)
-
-        return CoResponse.OK
+        return if (CoeditPlugin.getInstance(project).lockHandler.unlock(change.filePath)) CoResponse.OK else CoResponse.CANNOT_UNLOCK_FILE
     }
 }

@@ -21,40 +21,74 @@ class LockHandler(val project: Project, val basePath: String) {
         locks = HashMap()
     }
 
-    fun lockByMe(file: String) {
+    /**
+     * Lock file for editing from this side of plugin
+     *
+     * File will **not** be locked if it's already locked for edit
+     */
+    fun lockByMe(file: String): Status {
+        // TODO handle return types
+        if (file in locks) {
+            if (locks[file] == LockState.LOCKED_BY_ME) {
+                return Status.ALREADY_LOCKED_BY_ME
+            }
+            if (locks[file] == LockState.LOCKED_FOR_EDIT) {
+                return Status.ALREADY_LOCKED_FOR_EDIT
+            }
+        }
         locks[file] = LockState.LOCKED_BY_ME
+        return Status.OK
     }
 
-    fun lockForEdit(filePath: String) {
+    /**
+     * Lock file for edit
+     *
+     * File will be **not** locked if it's already locked by me
+     */
+    fun lockForEdit(filePath: String): Status {
         val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
-                ?: throw RuntimeException("Cannot access file $filePath")
+                ?: return Status.CANNOT_GET_FILE
         val document = FileDocumentManager.getInstance().getDocument(file)
-                ?: throw RuntimeException("Cannot get document by file $filePath")
-        document.removeDocumentListener(ChangeListener(project))
+                ?: return Status.CANNOT_GET_FILE
+        Utils.unregisterListener(document, ChangeListener(project))
         document.createGuardedBlock(0, document.textLength)
-        locks[filePath] = LockState.LOCKED_FOR_EDIT
+
+        if (filePath in locks) {
+            if (locks[filePath] == LockState.LOCKED_FOR_EDIT) {
+                return Status.ALREADY_LOCKED_FOR_EDIT
+            }
+            if (locks[filePath] == LockState.LOCKED_BY_ME) {
+                return Status.ALREADY_LOCKED_BY_ME
+            }
+        }
+        return Status.OK
     }
 
     fun stateOf(filePath: String): LockState? {
         return locks[filePath]
     }
 
-    fun unlock(filePath: String) {
+    fun unlock(filePath: String): Boolean {
         val status = locks.remove(filePath)
         val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
-                ?: throw RuntimeException("Cannot access file $filePath")
+                ?: return false
         val document = FileDocumentManager.getInstance().getDocument(file)
-                ?: throw RuntimeException("Cannot get document by file $filePath")
+                ?: return false
 
         if (status == LockState.LOCKED_FOR_EDIT) {
             Utils.removeAllGuardedBlocks(document)
         }
         if (status != LockState.LOCKED_BY_ME) {
-            document.addDocumentListener(ChangeListener(project))
+            Utils.registerListener(document, ChangeListener(project))
         }
+        return true
     }
 
     fun lockedByMe(): Set<String> {
         return locks.filterValues { it == LockState.LOCKED_BY_ME }.keys
+    }
+
+    enum class Status {
+        OK, ALREADY_LOCKED_BY_ME, ALREADY_LOCKED_FOR_EDIT, CANNOT_GET_FILE
     }
 }

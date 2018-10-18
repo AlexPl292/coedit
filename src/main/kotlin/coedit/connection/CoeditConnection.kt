@@ -81,6 +81,7 @@ class CoeditConnection {
         log.debug("Sending object. Type {}", request::class)
         objectOutputStream?.writeObject(request)
 
+        // TODO handle ERROR response
         log.debug("Waiting for response...")
         val coResponse = responseQueue.take()
         log.debug("Got response. Type {}", coResponse::class)

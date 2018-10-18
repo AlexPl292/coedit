@@ -23,6 +23,8 @@ class StopEditingAction : AnAction("StopEditingAction") {
         val lockedByMe = lockHandler.lockedByMe()
         lockedByMe.forEach {
             lockHandler.unlock(it)
+
+            //TODO handle problems with unlock
             coeditPlugin.myConn.send(CoRequestUnlock(it))
         }
     }

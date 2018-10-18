@@ -26,17 +26,26 @@ class Utils {
                     ?: throw RuntimeException("Cannot get relative path for file")
         }
 
+
         fun registerListener(virtualFile: VirtualFile, listener: DocumentListener) {
+            registerListener(FileDocumentManager.getInstance().getDocument(virtualFile), listener)
+        }
+
+        fun registerListener(document: Document?, listener: DocumentListener) {
             try {
-                FileDocumentManager.getInstance().getDocument(virtualFile)?.addDocumentListener(listener)
+                document?.addDocumentListener(listener)
             } catch (e: Throwable) {
                 // Nothing. This listener is already registered
             }
         }
 
         fun unregisterListener(virtualFile: VirtualFile, listener: DocumentListener) {
+            unregisterListener(FileDocumentManager.getInstance().getDocument(virtualFile), listener)
+        }
+
+        fun unregisterListener(document: Document?, listener: DocumentListener) {
             try {
-                FileDocumentManager.getInstance().getDocument(virtualFile)?.removeDocumentListener(listener)
+                document?.removeDocumentListener(listener)
             } catch (e: Throwable) {
                 // Nothing. There is no such listener
             }

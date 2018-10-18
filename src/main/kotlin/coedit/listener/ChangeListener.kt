@@ -34,14 +34,18 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
             val lockedByMe = lockHandler.lockedByMe()
             lockedByMe.forEach {
                 lockHandler.unlock(it)
+                //TODO handle problems with unlock
                 coeditPlugin.myConn.send(CoRequestUnlock(it))
             }
 
+            //TODO handle problems with lock
             coeditPlugin.myConn.send(CoRequestTryLock(relativePath, contentHashCode))
             lockHandler.lockByMe(relativePath)
         }
 
         val patch = CoPatch(event.offset, event.oldLength, event.newFragment.toString())
+
+        //TODO handle problems with changes
         CoeditPlugin.getInstance(project).myConn.send(CoRequestFileEdit(relativePath, patch))
     }
 }

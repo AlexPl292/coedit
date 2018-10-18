@@ -103,4 +103,8 @@ class LockHandler(val project: Project, val basePath: String) {
     fun allLockedFiles(): Set<String> {
         return locks.keys
     }
+
+    fun clear() {
+        locks.clear()
+    }
 }

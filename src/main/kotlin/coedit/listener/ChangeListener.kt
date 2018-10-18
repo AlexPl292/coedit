@@ -29,7 +29,7 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
         }
 
         val lockHandler = coeditPlugin.lockHandler
-        if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT) {
+        if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT || !coeditPlugin.editing.get()) {
             event.document.removeDocumentListener(this)
             return
         }

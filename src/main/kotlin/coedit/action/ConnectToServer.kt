@@ -23,4 +23,11 @@ class ConnectToServer : SetUpConnectionAction("ConnectToServer") {
 
         Messages.showMessageDialog(project, "Connected to server", "Greeting", Messages.getInformationIcon())
     }
+
+    override fun update(e: AnActionEvent?) {
+        val project = e?.project ?: return
+
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        e.presentation.isEnabled = !coeditPlugin.myConn.waitForConnection.get() && !coeditPlugin.editing.get()
+    }
 }

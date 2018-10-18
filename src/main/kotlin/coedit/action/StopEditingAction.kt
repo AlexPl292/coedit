@@ -28,4 +28,11 @@ class StopEditingAction : AnAction("StopEditingAction") {
             coeditPlugin.myConn.send(CoRequestUnlock(it))
         }
     }
+
+    override fun update(e: AnActionEvent?) {
+        val project = e?.project ?: return
+
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        e.presentation.isEnabled = coeditPlugin.editing.get()
+    }
 }

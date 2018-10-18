@@ -26,4 +26,11 @@ class StopCollaboration : AnAction("StopCollaboration") {
         coeditPlugin.myConn.send(CoRequestStopCollaboration())
         Utils.stopWork(project)
     }
+
+    override fun update(e: AnActionEvent?) {
+        val project = e?.project ?: return
+
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        e.presentation.isEnabled = coeditPlugin.editing.get()
+    }
 }

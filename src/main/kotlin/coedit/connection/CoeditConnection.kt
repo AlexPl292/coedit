@@ -13,6 +13,7 @@ import java.net.Socket
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Created by Alex Plate on 16.10.2018.
@@ -34,17 +35,25 @@ class CoeditConnection {
 
     private val responseQueue: BlockingQueue<CoResponse> = ArrayBlockingQueue(1)
 
+    var waitForConnection: AtomicBoolean = AtomicBoolean(false)
+
     fun startServer(project: Project) {
         val coeditPlugin = CoeditPlugin.getInstance(project)
         if (coeditPlugin.editing.get()) {
             return
         }
 
+        waitForConnection.set(true)
         log.debug("Start server")
         myServerSocket = ServerSocket(myPort)
 
         serverThread = Thread(Runnable {
             myClientSocket = myServerSocket?.accept()
+            waitForConnection.set(false)
+            val coeditPlugin1 = CoeditPlugin.getInstance(project)
+            coeditPlugin1.editing.set(true)
+            coeditPlugin1.lockHandler.clear()
+
 
             if (myClientSocket == null) {
                 throw RuntimeException("Client socket is null")
@@ -55,7 +64,6 @@ class CoeditConnection {
             startReading(project)
         })
         serverThread?.start()
-        CoeditPlugin.getInstance(project).editing.set(true)
     }
 
     fun connectToServer(project: Project) {
@@ -71,6 +79,7 @@ class CoeditConnection {
         serverThread = Thread(Runnable { startReading(project) })
         serverThread?.start()
         coeditPlugin.editing.set(true)
+        coeditPlugin.lockHandler.clear()
     }
 
     fun stopWork() {

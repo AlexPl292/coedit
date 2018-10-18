@@ -1,5 +1,6 @@
 package coedit.connection
 
+import coedit.CoeditPlugin
 import coedit.connection.protocol.CoRequest
 import coedit.connection.protocol.CoResponse
 import coedit.service.ChangesService
@@ -29,7 +30,7 @@ class CoeditConnection {
     private var objectOutputStream: ObjectOutputStream? = null
     private var objectInputStream: ObjectInputStream? = null
 
-    private val serverThread: Thread? = null
+    private var serverThread: Thread? = null
 
     private val responseQueue: BlockingQueue<CoResponse> = ArrayBlockingQueue(1)
 
@@ -38,7 +39,7 @@ class CoeditConnection {
         log.debug("Start server")
         myServerSocket = ServerSocket(myPort)
 
-        val thread = Thread(Runnable {
+        serverThread = Thread(Runnable {
             myClientSocket = myServerSocket?.accept()
 
             if (myClientSocket == null) {
@@ -49,9 +50,8 @@ class CoeditConnection {
 
             startReading(project)
         })
-        thread.start()
-
-        print("y")
+        serverThread?.start()
+        CoeditPlugin.getInstance(project).editing.set(true)
     }
 
     fun connectToServer(project: Project) {
@@ -60,10 +60,9 @@ class CoeditConnection {
         objectOutputStream = ObjectOutputStream(socket.getOutputStream())
         objectInputStream = ObjectInputStream(socket.getInputStream())
 
-        val thread = Thread(Runnable { startReading(project) })
-        thread.start()
-
-        print("x")
+        serverThread = Thread(Runnable { startReading(project) })
+        serverThread?.start()
+        CoeditPlugin.getInstance(project).editing.set(true)
     }
 
     fun stopWork() {

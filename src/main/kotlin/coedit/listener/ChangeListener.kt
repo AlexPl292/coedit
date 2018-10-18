@@ -24,6 +24,10 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
         val relativePath = Utils.getRelativePath(event.document, project)
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
+        if (!coeditPlugin.editing.get()) {
+            return
+        }
+
         val lockHandler = coeditPlugin.lockHandler
         if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT) {
             event.document.removeDocumentListener(this)

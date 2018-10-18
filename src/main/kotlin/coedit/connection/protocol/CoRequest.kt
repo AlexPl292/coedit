@@ -52,3 +52,5 @@ data class CoRequestTryLock(
 data class CoRequestUnlock(
         val filePath: String
 ) : CoRequest
+
+class CoRequestStopCollaboration : CoRequest

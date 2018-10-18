@@ -15,7 +15,8 @@ class ConnectToServer : SetUpConnectionAction("ConnectToServer") {
 
         val project = e.project ?: return
 
-        val connection = CoeditPlugin.getInstance(project).myConn
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        val connection = coeditPlugin.myConn
         connection.connectToServer(project)
 
         super.actionPerformed(e)

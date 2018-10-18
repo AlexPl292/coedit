@@ -29,13 +29,16 @@ class CoeditConnection {
     private var objectOutputStream: ObjectOutputStream? = null
     private var objectInputStream: ObjectInputStream? = null
 
+    private val serverThread: Thread? = null
+
     private val responseQueue: BlockingQueue<CoResponse> = ArrayBlockingQueue(1)
 
     fun startServer(project: Project) {
 
+        log.debug("Start server")
         myServerSocket = ServerSocket(myPort)
 
-        Thread(Runnable {
+        val thread = Thread(Runnable {
             myClientSocket = myServerSocket?.accept()
 
             if (myClientSocket == null) {
@@ -45,7 +48,10 @@ class CoeditConnection {
             objectOutputStream = ObjectOutputStream(myClientSocket?.getOutputStream())
 
             startReading(project)
-        }).start()
+        })
+        thread.start()
+
+        print("y")
     }
 
     fun connectToServer(project: Project) {
@@ -54,18 +60,32 @@ class CoeditConnection {
         objectOutputStream = ObjectOutputStream(socket.getOutputStream())
         objectInputStream = ObjectInputStream(socket.getInputStream())
 
-        Thread(Runnable { startReading(project) }).start()
+        val thread = Thread(Runnable { startReading(project) })
+        thread.start()
+
+        print("x")
     }
 
-    fun startReading(project: Project) {
+    fun stopWork() {
+        serverThread?.interrupt()
+        objectOutputStream?.close()
+        objectInputStream?.close()
+    }
+
+    private fun startReading(project: Project) {
         val changesService = ChangesService(project)
         myServerSocket.use { _ ->
             myClientSocket.use { _ ->
                 objectInputStream.use { inStream ->
-                    objectOutputStream.use { outStream ->
+                    objectOutputStream.use { _ ->
                         while (true) {
-                            log.error("Wait for incoming requests")
+                            if (Thread.interrupted()) break;
+                            log.debug("Wait for incoming requests")
                             val request = inStream?.readObject()
+                            log.debug("Got request. ", request)
+
+                            if (Thread.interrupted()) break;
+
                             if (request is CoResponse) {
                                 responseQueue.put(request)
                                 continue
@@ -79,18 +99,20 @@ class CoeditConnection {
     }
 
     fun send(request: CoRequest): CoResponse {
-        log.debug("Sending object. Type {}", request::class)
+        log.debug("Sending object. ", request)
         objectOutputStream?.writeObject(request)
 
         // TODO handle ERROR response
         log.debug("Waiting for response...")
         val coResponse = responseQueue.poll(1, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
-        log.debug("Got response. Type {}", coResponse::class)
+        log.debug("Got response. ", coResponse)
 
         return coResponse
     }
 
     fun response(response: CoResponse) {
+        log.debug("Response ", response)
         objectOutputStream?.writeObject(response)
     }
+
 }

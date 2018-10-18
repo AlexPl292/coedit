@@ -27,6 +27,8 @@
                     description="connect to server"/>
             <action id="coedit.action.StopEditingAction" class="coedit.action.StopEditingAction" text="Stop edit and release lock"
                     description="stop editing file and release lock"/>
+            <action id="coedit.action.StopCollaboration" class="coedit.action.StopCollaboration" text="Stop collaboration"
+                    description="stop collaboration and server"/>
         </group>
     </actions>
     <project-components>

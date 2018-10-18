@@ -51,6 +51,11 @@ class Utils {
             }
         }
 
+        fun removeAllGuardedBlocks(file: VirtualFile) {
+            val document = FileDocumentManager.getInstance().getDocument(file) ?: return
+            removeAllGuardedBlocks(document)
+        }
+
         fun removeAllGuardedBlocks(document: Document) {
             while (true) {
                 // Well, I have no idea, how can I get all guard blocks in another way

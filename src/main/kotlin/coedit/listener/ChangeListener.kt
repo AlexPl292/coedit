@@ -4,6 +4,7 @@ import coedit.CoeditPlugin
 import coedit.connection.protocol.CoPatch
 import coedit.connection.protocol.CoRequestFileEdit
 import coedit.connection.protocol.CoRequestTryLock
+import coedit.connection.protocol.CoRequestUnlock
 import coedit.model.LockState
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
@@ -23,15 +24,21 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
         var relativePath = VfsUtilCore.getRelativePath(file, root!!)
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
-        if (coeditPlugin.lockHandler.stateOf(relativePath!!) == LockState.LOCKED_FOR_EDIT) {
+        val lockHandler = coeditPlugin.lockHandler
+        if (lockHandler.stateOf(relativePath!!) == LockState.LOCKED_FOR_EDIT) {
             event.document.removeDocumentListener(this)
             return
         }
-        if (coeditPlugin.lockHandler.stateOf(relativePath) != LockState.LOCKED_BY_ME) {
+        if (lockHandler.stateOf(relativePath) != LockState.LOCKED_BY_ME) {
             val contentHashCode = event.document.text.hashCode()
+            val lockedByMe = lockHandler.lockedByMe()
+            lockedByMe.forEach {
+                lockHandler.unlock(it)
+                coeditPlugin.myConn.send(CoRequestUnlock(it))
+            }
 
             val response = coeditPlugin.myConn.send(CoRequestTryLock(relativePath, contentHashCode))
-            coeditPlugin.lockHandler.lockByMe(relativePath)
+            lockHandler.lockByMe(relativePath)
         }
 
         val patch = CoPatch(event.offset, event.oldLength, event.newFragment.toString())

@@ -40,10 +40,9 @@ class ChangesService(private val project: Project) {
 
         val newFile = parentPath.findChild(change.filePath) ?: throw RuntimeException("Cannot read file")
 
-        val document = FileDocumentManager.getInstance().getDocument(newFile)
-
         WriteCommandAction.runWriteCommandAction(project) {
-            document?.deleteString(change.patch.offset, change.patch.oldLength)
+            val document = FileDocumentManager.getInstance().getDocument(newFile)
+            document?.deleteString(change.patch.offset, change.patch.offset + change.patch.oldLength)
             document?.insertString(change.patch.offset, change.patch.newString)
         }
 

@@ -13,9 +13,7 @@ import com.intellij.openapi.vfs.VfsUtilCore
 /**
  * Created by Alex Plate on 17.10.2018.
  */
-class InitListener(val project: Project) : DocumentListener, CoListener {
-    override val name: String
-        get() = "InitListener"
+class InitListener(val project: Project) : DocumentListener, CoListener("InitListener") {
 
 /*    override fun beforeDocumentChange(event: DocumentEvent?) {
         var file = FileDocumentManager.getInstance().getFile(event?.document!!)

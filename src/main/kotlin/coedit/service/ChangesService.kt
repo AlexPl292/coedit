@@ -1,6 +1,7 @@
 package coedit.service
 
 import coedit.CoeditPlugin
+import coedit.Utils
 import coedit.connection.protocol.*
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -45,8 +46,10 @@ class ChangesService(private val project: Project) {
 
         WriteCommandAction.runWriteCommandAction(project) {
             val document = FileDocumentManager.getInstance().getDocument(newFile)
-            document?.replaceString(change.patch.offset, change.patch.offset + change.patch.oldLength, change.patch.newString)
-            document?.createGuardedBlock(0, document.textLength)
+                    ?: throw RuntimeException("Cannot access file")
+            document.replaceString(change.patch.offset, change.patch.offset + change.patch.oldLength, change.patch.newString)
+            Utils.removeAllGuardedBlocks(document)
+            document.createGuardedBlock(0, document.textLength)
         }
 
         return CoResponse.OK

@@ -1,6 +1,7 @@
 package coedit.listener
 
 import coedit.CoeditPlugin
+import coedit.Utils
 import coedit.connection.protocol.CoPatch
 import coedit.connection.protocol.CoRequestFileEdit
 import coedit.connection.protocol.CoRequestTryLock
@@ -8,10 +9,7 @@ import coedit.connection.protocol.CoRequestUnlock
 import coedit.model.LockState
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.vfs.VfsUtilCore
 
 /**
  * Created by Alex Plate on 17.10.2018.
@@ -19,13 +17,15 @@ import com.intellij.openapi.vfs.VfsUtilCore
 class ChangeListener(private val project: Project) : DocumentListener, CoListener("ChangeListener") {
 
     override fun beforeDocumentChange(event: DocumentEvent?) {
-        var file = FileDocumentManager.getInstance().getFile(event?.document!!)
-        var root = ProjectFileIndex.getInstance(project).getContentRootForFile(file!!)
-        var relativePath = VfsUtilCore.getRelativePath(file, root!!)
+        if (event == null) {
+            throw RuntimeException("IntelliJ IDEA error. Cannot get document event")
+        }
+
+        val relativePath = Utils.getRelativePath(event.document, project)
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
         val lockHandler = coeditPlugin.lockHandler
-        if (lockHandler.stateOf(relativePath!!) == LockState.LOCKED_FOR_EDIT) {
+        if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT) {
             event.document.removeDocumentListener(this)
             return
         }
@@ -37,7 +37,7 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
                 coeditPlugin.myConn.send(CoRequestUnlock(it))
             }
 
-            val response = coeditPlugin.myConn.send(CoRequestTryLock(relativePath, contentHashCode))
+            coeditPlugin.myConn.send(CoRequestTryLock(relativePath, contentHashCode))
             lockHandler.lockByMe(relativePath)
         }
 

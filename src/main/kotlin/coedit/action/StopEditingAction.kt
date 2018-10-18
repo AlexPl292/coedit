@@ -11,9 +11,13 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 
 class StopEditingAction : AnAction("StopEditingAction") {
     override fun actionPerformed(e: AnActionEvent?) {
-        val project = e?.project
+        if (e == null) {
+            throw RuntimeException("IntelliJ IDEA error. Cannot get action event")
+        }
 
-        val coeditPlugin = CoeditPlugin.getInstance(project!!)
+        val project = e.project ?: return
+
+        val coeditPlugin = CoeditPlugin.getInstance(project)
         val lockHandler = coeditPlugin.lockHandler
 
         val lockedByMe = lockHandler.lockedByMe()

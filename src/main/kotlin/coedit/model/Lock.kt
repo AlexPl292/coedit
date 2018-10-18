@@ -1,5 +1,6 @@
 package coedit.model
 
+import coedit.Utils
 import coedit.listener.ChangeListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -26,9 +27,11 @@ class LockHandler(val project: Project, val basePath: String) {
 
     fun lockForEdit(filePath: String) {
         val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
-        val document = FileDocumentManager.getInstance().getDocument(file!!)
-        document?.removeDocumentListener(ChangeListener(project))
-        document?.createGuardedBlock(0, document.textLength)
+                ?: throw RuntimeException("Cannot access file $filePath")
+        val document = FileDocumentManager.getInstance().getDocument(file)
+                ?: throw RuntimeException("Cannot get document by file $filePath")
+        document.removeDocumentListener(ChangeListener(project))
+        document.createGuardedBlock(0, document.textLength)
         locks[filePath] = LockState.LOCKED_FOR_EDIT
     }
 
@@ -39,17 +42,15 @@ class LockHandler(val project: Project, val basePath: String) {
     fun unlock(filePath: String) {
         val status = locks.remove(filePath)
         val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
-        val document = FileDocumentManager.getInstance().getDocument(file!!)
+                ?: throw RuntimeException("Cannot access file $filePath")
+        val document = FileDocumentManager.getInstance().getDocument(file)
+                ?: throw RuntimeException("Cannot get document by file $filePath")
 
         if (status == LockState.LOCKED_FOR_EDIT) {
-            while (true) {
-                // Well, I have no idea, how can I get all guard blocks in another way
-                val guard = document?.getRangeGuard(0, document.textLength) ?: break
-                document.removeGuardedBlock(guard)
-            }
+            Utils.removeAllGuardedBlocks(document)
         }
         if (status != LockState.LOCKED_BY_ME) {
-            document?.addDocumentListener(ChangeListener(project))
+            document.addDocumentListener(ChangeListener(project))
         }
     }
 

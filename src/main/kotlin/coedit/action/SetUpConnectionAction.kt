@@ -1,16 +1,14 @@
 package coedit.action
 
 import coedit.CoeditPlugin
+import coedit.Utils
 import coedit.listener.ChangeListener
 import coedit.model.LockState
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
-import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 
 /**
@@ -19,27 +17,27 @@ import com.intellij.openapi.vfs.VirtualFile
 
 abstract class SetUpConnectionAction(name: String) : AnAction(name) {
     override fun actionPerformed(e: AnActionEvent?) {
-        val project = e?.project
+        if (e == null) {
+            throw RuntimeException("IntelliJ IDEA error. Cannot get action event")
+        }
 
-        val coeditPlugin = CoeditPlugin.getInstance(project!!)
+        val project = e.project ?: return
+
+        val coeditPlugin = CoeditPlugin.getInstance(project)
         val messageBus = ApplicationManager.getApplication().messageBus.connect()
         messageBus.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
 
             override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
-                var root = ProjectFileIndex.getInstance(project).getContentRootForFile(file)
-                var relativePath = VfsUtilCore.getRelativePath(file, root!!)
-                if (coeditPlugin.lockHandler.stateOf(relativePath!!) == LockState.LOCKED_FOR_EDIT) {
+                val relativePath = Utils.getRelativePath(file, project)
+
+                if (coeditPlugin.lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT) {
                     return
                 }
-                FileDocumentManager.getInstance().getDocument(file)?.addDocumentListener(ChangeListener(project))
+                Utils.registerListener(file, ChangeListener(project))
             }
 
             override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
-                try {
-                    FileDocumentManager.getInstance().getDocument(file)?.removeDocumentListener(ChangeListener(project))
-                } catch (e: Throwable) {
-                    // Nothing
-                }
+                Utils.unregisterListener(file, ChangeListener(project))
             }
         })
     }

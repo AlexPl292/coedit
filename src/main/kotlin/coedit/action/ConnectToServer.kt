@@ -9,9 +9,13 @@ import com.intellij.openapi.ui.Messages
  */
 class ConnectToServer : SetUpConnectionAction("ConnectToServer") {
     override fun actionPerformed(e: AnActionEvent?) {
-        val project = e?.project
+        if (e == null) {
+            throw RuntimeException("IntelliJ IDEA error. Cannot get action event")
+        }
 
-        val connection = CoeditPlugin.getInstance(project!!).myConn
+        val project = e.project ?: return
+
+        val connection = CoeditPlugin.getInstance(project).myConn
         connection.connectToServer(project)
 
         super.actionPerformed(e)

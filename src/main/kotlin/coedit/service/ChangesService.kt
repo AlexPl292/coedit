@@ -21,6 +21,7 @@ class ChangesService(private val project: Project) {
             is CoRequestFileEdit -> editFile(change)
             is CoRequestTryLock -> tryLock(change)
             is CoRequestUnlock -> unlock(change)
+            is CoRequestStopCollaboration -> stopCollaboration(change)
             else -> CoResponse.ERROR
         }
         val coeditPlugin = CoeditPlugin.getInstance(project)
@@ -76,5 +77,10 @@ class ChangesService(private val project: Project) {
 
     private fun unlock(change: CoRequestUnlock): CoResponse {
         return if (CoeditPlugin.getInstance(project).lockHandler.unlock(change.filePath)) CoResponse.OK else CoResponse.CANNOT_UNLOCK_FILE
+    }
+
+    private fun stopCollaboration(change: CoRequestStopCollaboration): CoResponse {
+        Utils.stopWork(project)
+        return CoResponse.OK
     }
 }

@@ -2,6 +2,7 @@ package coedit.model
 
 import coedit.Utils
 import coedit.listener.ChangeListener
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -48,10 +49,12 @@ class LockHandler(val project: Project, val basePath: String) {
     fun lockForEdit(filePath: String): Status {
         val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
                 ?: return Status.CANNOT_GET_FILE
-        val document = FileDocumentManager.getInstance().getDocument(file)
-                ?: return Status.CANNOT_GET_FILE
-        Utils.unregisterListener(document, ChangeListener(project))
-        document.createGuardedBlock(0, document.textLength)
+
+        ApplicationManager.getApplication().runReadAction {
+            val document = FileDocumentManager.getInstance().getDocument(file)
+            Utils.unregisterListener(document, ChangeListener(project))
+            document?.createGuardedBlock(0, document.textLength)
+        }
 
         if (filePath in locks) {
             if (locks[filePath] == LockState.LOCKED_FOR_EDIT) {
@@ -61,6 +64,7 @@ class LockHandler(val project: Project, val basePath: String) {
                 return Status.ALREADY_LOCKED_BY_ME
             }
         }
+        locks[filePath] = LockState.LOCKED_FOR_EDIT
         return Status.OK
     }
 
@@ -72,14 +76,18 @@ class LockHandler(val project: Project, val basePath: String) {
         val status = locks.remove(filePath)
         val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
                 ?: return false
-        val document = FileDocumentManager.getInstance().getDocument(file)
-                ?: return false
 
-        if (status == LockState.LOCKED_FOR_EDIT) {
-            Utils.removeAllGuardedBlocks(document)
-        }
-        if (status != LockState.LOCKED_BY_ME) {
-            Utils.registerListener(document, ChangeListener(project))
+        ApplicationManager.getApplication().runReadAction {
+            val document = FileDocumentManager.getInstance().getDocument(file)
+
+            if (document != null) {
+                if (status == LockState.LOCKED_FOR_EDIT) {
+                    Utils.removeAllGuardedBlocks(document)
+                }
+                if (status != LockState.LOCKED_BY_ME) {
+                    Utils.registerListener(document, ChangeListener(project))
+                }
+            }
         }
         return true
     }
@@ -90,5 +98,9 @@ class LockHandler(val project: Project, val basePath: String) {
 
     enum class Status {
         OK, ALREADY_LOCKED_BY_ME, ALREADY_LOCKED_FOR_EDIT, CANNOT_GET_FILE
+    }
+
+    fun allLockedFiles(): Set<String> {
+        return locks.keys
     }
 }

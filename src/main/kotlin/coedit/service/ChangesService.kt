@@ -44,8 +44,8 @@ class ChangesService(private val project: Project) {
 
         WriteCommandAction.runWriteCommandAction(project) {
             val document = FileDocumentManager.getInstance().getDocument(newFile)
-            document?.deleteString(change.patch.offset, change.patch.offset + change.patch.oldLength)
-            document?.insertString(change.patch.offset, change.patch.newString)
+            document?.replaceString(change.patch.offset, change.patch.offset + change.patch.oldLength, change.patch.newString)
+            document?.createGuardedBlock(0, document.textLength)
         }
 
         return CoResponse.OK

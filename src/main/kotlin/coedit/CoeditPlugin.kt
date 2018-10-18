@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
  * Created by Alex Plate on 16.10.2018.
  */
 
-class CoeditPlugin(val myProject: Project) : ProjectComponent {
+class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
     val myConn: CoeditConnection = CoeditConnection()
     val myBasePath = myProject.basePath ?: throw RuntimeException("Cannot detect base path of project")
@@ -33,8 +33,9 @@ class CoeditPlugin(val myProject: Project) : ProjectComponent {
 
     fun lockForEdit(filePath: String) {
         val file = LocalFileSystem.getInstance().findFileByPath(myBasePath)?.findChild(filePath)
-        file?.isWritable = false
-        FileDocumentManager.getInstance().getDocument(file!!)?.removeDocumentListener(ChangeListener(myProject))
+        val document = FileDocumentManager.getInstance().getDocument(file!!)
+        document?.removeDocumentListener(ChangeListener(myProject))
+        document?.createGuardedBlock(0, document.textLength)
         locks[filePath] = LockState.LOCKED_FOR_EDIT
     }
 }

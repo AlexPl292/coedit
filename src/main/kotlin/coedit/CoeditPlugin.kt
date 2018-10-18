@@ -15,6 +15,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
+import com.intellij.util.messages.MessageBusConnection
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -26,7 +27,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     val myConn: CoeditConnection = CoeditConnection()
     val myBasePath = myProject.basePath ?: throw RuntimeException("Cannot detect base path of project")
     val lockHandler = LockHandler(myProject, myBasePath)
-    val messageBusConnection = ApplicationManager.getApplication().messageBus.connect()
+    var messageBusConnection: MessageBusConnection? = null
 
     val editing: AtomicBoolean = AtomicBoolean(false)
 
@@ -41,7 +42,8 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
     fun subscribeToMessageBus() {
         try {
-            messageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
+            messageBusConnection = ApplicationManager.getApplication().messageBus.connect()
+            messageBusConnection?.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
 
                 override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
                     val relativePath = Utils.getRelativePath(file, myProject)
@@ -56,7 +58,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
                     Utils.unregisterListener(file, ChangeListener(myProject))
                 }
             })
-            messageBusConnection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
+            messageBusConnection?.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
                 override fun before(events: MutableList<out VFileEvent>) {
                     events.forEach {
                         if (it is VFileCreateEvent) {
@@ -71,6 +73,6 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     }
 
     fun disconnectMessageBus() {
-        messageBusConnection.disconnect()
+        messageBusConnection?.disconnect()
     }
 }

@@ -35,6 +35,10 @@ class CoeditConnection {
     private val responseQueue: BlockingQueue<CoResponse> = ArrayBlockingQueue(1)
 
     fun startServer(project: Project) {
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        if (coeditPlugin.editing.get()) {
+            return
+        }
 
         log.debug("Start server")
         myServerSocket = ServerSocket(myPort)
@@ -55,6 +59,10 @@ class CoeditConnection {
     }
 
     fun connectToServer(project: Project) {
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+        if (coeditPlugin.editing.get()) {
+            return
+        }
         val socket = Socket(myHost, myPort)
 
         objectOutputStream = ObjectOutputStream(socket.getOutputStream())
@@ -62,7 +70,7 @@ class CoeditConnection {
 
         serverThread = Thread(Runnable { startReading(project) })
         serverThread?.start()
-        CoeditPlugin.getInstance(project).editing.set(true)
+        coeditPlugin.editing.set(true)
     }
 
     fun stopWork() {

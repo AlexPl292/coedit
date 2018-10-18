@@ -11,6 +11,7 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by Alex Plate on 16.10.2018.
@@ -83,7 +84,7 @@ class CoeditConnection {
 
         // TODO handle ERROR response
         log.debug("Waiting for response...")
-        val coResponse = responseQueue.take()
+        val coResponse = responseQueue.poll(1, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
         log.debug("Got response. Type {}", coResponse::class)
 
         return coResponse

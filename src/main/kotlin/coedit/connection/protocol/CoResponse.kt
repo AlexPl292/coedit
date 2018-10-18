@@ -10,6 +10,11 @@ data class CoResponse(
         val message: String
 ) : Serializable {
     companion object {
+
+        // Special response. Should be used on client side and means that we've waited for response to long and should
+        // continue work
+        val CONTINUE = CoResponse(0, "")
+
         // This codes have nothing common with HTTP codes
         val OK = CoResponse(200, "OK")
         val LOCK_FILE_ALREADY_LOCKED = CoResponse(201, "File already locked")

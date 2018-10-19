@@ -1,6 +1,7 @@
 package coedit.action
 
 import coedit.CoeditPlugin
+import coedit.dialog.ConnectToServerDialog
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
@@ -15,12 +16,7 @@ class ConnectToServer : AnAction("ConnectToServer") {
 
         val project = e.project ?: return
 
-        val coeditPlugin = CoeditPlugin.getInstance(project)
-        val connection = coeditPlugin.myConn
-        connection.connectToServer(project)
-
-        coeditPlugin.subscribeToMessageBus()
-
+        ConnectToServerDialog(project).show()
     }
 
     override fun update(e: AnActionEvent?) {

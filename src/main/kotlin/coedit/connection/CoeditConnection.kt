@@ -27,8 +27,8 @@ class CoeditConnection {
 
     private val log = Logger.getInstance(this.javaClass)
 
-    private val myPort = 8089
-    private val myHost = "localhost"
+    var myPort = 8089
+    var myHost = "localhost"
     private var myServerSocket: ServerSocket? = null
     private var myClientSocket: Socket? = null
 
@@ -52,6 +52,7 @@ class CoeditConnection {
         myServerSocket = ServerSocket(myPort)
 
         serverThread = Thread(Runnable {
+            Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Waiting for connections", NotificationType.INFORMATION))
             myClientSocket = myServerSocket?.accept()
             waitForConnection.set(false)
             val coeditPlugin1 = CoeditPlugin.getInstance(project)

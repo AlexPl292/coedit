@@ -4,15 +4,14 @@ import coedit.CoeditPlugin
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-
-
 
 
 /**
  * Created by Alex Plate on 17.10.2018.
  */
-class StartServer : SetUpConnectionAction("StartServer") {
+class StartServer : AnAction("StartServer") {
     override fun actionPerformed(e: AnActionEvent?) {
         if (e == null) {
             throw RuntimeException("IntelliJ IDEA error. Cannot get action event")
@@ -23,7 +22,7 @@ class StartServer : SetUpConnectionAction("StartServer") {
         val connection = coeditPlugin.myConn
         connection.startServer(project)
 
-        super.actionPerformed(e)
+        coeditPlugin.subscribeToMessageBus()
 
         Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Waiting for connections", NotificationType.INFORMATION))
     }

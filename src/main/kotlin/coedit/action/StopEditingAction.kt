@@ -24,7 +24,6 @@ class StopEditingAction : AnAction("StopEditingAction") {
         lockedByMe.forEach {
             lockHandler.unlock(it)
 
-            //TODO handle problems with unlock
             coeditPlugin.myConn.send(CoRequestUnlock(it))
         }
     }

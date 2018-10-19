@@ -28,7 +28,6 @@ class LockHandler(val project: Project, val basePath: String) {
      * File will **not** be locked if it's already locked for edit
      */
     fun lockByMe(file: String): Status {
-        // TODO handle return types
         if (file in locks) {
             if (locks[file] == LockState.LOCKED_BY_ME) {
                 return Status.ALREADY_LOCKED_BY_ME

@@ -16,7 +16,6 @@ import java.io.File
 
 class ChangesService(private val project: Project) {
     fun handleChange(change: CoRequest) {
-        // FIXME Not Open-closed principle
         val response = when (change) {
             is CoRequestFileCreation -> createFile(change)
             is CoRequestFileEdit -> editFile(change)

@@ -132,10 +132,14 @@ class CoeditConnection {
         log.debug("Sending object. ", request)
         objectOutputStream?.writeObject(request)
 
-        // TODO handle ERROR response
         log.debug("Waiting for response...")
         val coResponse = responseQueue.poll(1, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
         log.debug("Got response. ", coResponse)
+
+        if (coResponse == CoResponse.ERROR) {
+            log.error("Error response from server")
+            Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Unhandled error on server", NotificationType.ERROR))
+        }
 
         return coResponse
     }

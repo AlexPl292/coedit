@@ -59,7 +59,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
                         val relativePath = Utils.getRelativePath(it.path, myProject)
                         val isDirectory = it.file.isDirectory
 
-                        // TODO **DO NOT DELETE FILE IN CASE OF BAD RESPONSE**
+                        // TODO **DELETE FILE IN CASE OF BAD RESPONSE**
                         myConn.send(CoRequestFileDeletion(relativePath, isDirectory))
                     } else if (it is VFilePropertyChangeEvent && it.propertyName == "name") {
                         val relativePath = Utils.getRelativePath(it.path, myProject)

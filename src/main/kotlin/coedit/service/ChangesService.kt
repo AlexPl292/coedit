@@ -33,8 +33,12 @@ class ChangesService(private val project: Project) {
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
         val file = File(coeditPlugin.myBasePath + File.separator + change.filePath)
-        file.parentFile.mkdirs()
-        file.createNewFile()
+        if (change.isDirectory) {
+            file.mkdirs()
+        } else {
+            file.parentFile.mkdirs()
+            file.createNewFile()
+        }
 
         return CoResponse.OK
     }

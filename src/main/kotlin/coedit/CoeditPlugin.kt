@@ -1,11 +1,17 @@
 package coedit
 
 import coedit.connection.CoeditConnection
+import coedit.connection.protocol.CoRequestFileCreation
 import coedit.listener.ChangeListener
 import coedit.model.LockHandler
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.util.messages.MessageBusConnection
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -32,31 +38,21 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     }
 
     fun subscribeToMessageBus() {
-        try {
-/*            messageBusConnection = ApplicationManager.getApplication().messageBus.connect()
-            messageBusConnection?.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
-                override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
-                    Utils.unregisterListener(file, ChangeListener(myProject))
-                }
-            })*/
-            EditorFactory.getInstance().eventMulticaster.addDocumentListener(ChangeListener(myProject))
-/*            messageBusConnection?.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
-                override fun before(events: MutableList<out VFileEvent>) {
-                    events.forEach {
-                        if (it is VFileCreateEvent) {
-                            myConn.send(CoRequestFileCreation(it.path.removePrefix(myBasePath).substring(1), "".toByteArray()))
-                        } else if (it is VFileContentChangeEvent) {
-                            Utils.registerListener(it.file, ChangeListener(myProject))
-                        }
+        EditorFactory.getInstance().eventMulticaster.addDocumentListener(ChangeListener(myProject))
+        messageBusConnection = ApplicationManager.getApplication().messageBus.connect()
+        messageBusConnection?.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
+            override fun before(events: MutableList<out VFileEvent>) {
+                events.forEach {
+                    if (it is VFileCreateEvent) {
+                        myConn.send(CoRequestFileCreation(it.path.removePrefix(myBasePath).substring(1), it.isDirectory))
                     }
                 }
-            })*/
-        } catch (e: Throwable) {
-            // Nothing. We already have this (on second connect)
-        }
+            }
+        })
     }
 
     fun disconnectMessageBus() {
         EditorFactory.getInstance().eventMulticaster.removeDocumentListener(ChangeListener(myProject))
+        messageBusConnection?.disconnect()
     }
 }

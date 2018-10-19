@@ -20,7 +20,7 @@ fun createFile() {
     val host = "localhost"
     val port = 8089
 
-    val testFile = CoRequestFileCreation("Test.java", "TestData".toByteArray())
+    val testFile = CoRequestFileCreation("Test.java", false)
 
     Socket(host, port).use { echoSocket ->
         ObjectOutputStream(echoSocket.getOutputStream()).use { objectStream ->

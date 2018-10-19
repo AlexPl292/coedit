@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
  */
 
 enum class LockState {
-    LOCKED_FOR_EDIT, LOCKED_BY_ME
+    LOCKED_FOR_EDIT, LOCKED_BY_ME, DISABLE_HANDLER
 }
 
 class LockHandler(val project: Project, val basePath: String) {
@@ -70,6 +70,32 @@ class LockHandler(val project: Project, val basePath: String) {
 
     fun stateOf(filePath: String): LockState? {
         return locks[filePath]
+    }
+
+    fun removeState(filePath: String): LockState? {
+        return locks.remove(filePath)
+    }
+
+    fun disableHandler(filePath: String) {
+        locks[filePath] = LockState.DISABLE_HANDLER
+    }
+
+    fun enableHandler(filePath: String) {
+        if (locks[filePath] == LockState.DISABLE_HANDLER) {
+            locks.remove(filePath)
+        }
+    }
+
+    fun handleDisabled(filePath: String): Boolean {
+        return locks[filePath] == LockState.DISABLE_HANDLER
+    }
+
+    fun handleDisabledAndReset(filePath: String): Boolean {
+        val res = locks[filePath] == LockState.DISABLE_HANDLER
+        if (res) {
+            locks.remove(filePath)
+        }
+        return res
     }
 
     fun unlock(filePath: String): Boolean {

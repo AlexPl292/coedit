@@ -24,6 +24,7 @@ class ChangesService(private val project: Project) {
             is CoRequestUnlock -> unlock(change)
             is CoRequestStopCollaboration -> stopCollaboration(change)
             is CoRequestFileDeletion -> deleteFile(change)
+            is CoRequestFileRename -> renameFile(change)
             else -> CoResponse.ERROR
         }
         val coeditPlugin = CoeditPlugin.getInstance(project)
@@ -33,12 +34,15 @@ class ChangesService(private val project: Project) {
     private fun createFile(change: CoRequestFileCreation): CoResponse {
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
-        val file = File(coeditPlugin.myBasePath + File.separator + change.filePath)
-        if (change.isDirectory) {
-            file.mkdirs()
-        } else {
-            file.parentFile.mkdirs()
-            file.createNewFile()
+        WriteCommandAction.runWriteCommandAction(project) {
+            coeditPlugin.lockHandler.disableHandler(change.filePath)
+            val file = File(coeditPlugin.myBasePath + File.separator + change.filePath)
+            if (change.isDirectory) {
+                file.mkdirs()
+            } else {
+                file.parentFile.mkdirs()
+                file.createNewFile()
+            }
         }
 
         return CoResponse.OK
@@ -48,10 +52,29 @@ class ChangesService(private val project: Project) {
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
         if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath)) {
-            return CoResponse.CANNOT_DELETE_FILE_LOCKED(change.filePath)
+            return CoResponse.CANNOT_CHANGE_FILE_LOCKED(change.filePath)
         }
-        val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
-        file?.delete(project)
+        WriteCommandAction.runWriteCommandAction(project) {
+            coeditPlugin.lockHandler.disableHandler(change.filePath)
+            val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
+            file?.delete(project)
+        }
+        return CoResponse.OK
+    }
+
+    private fun renameFile(change: CoRequestFileRename): CoResponse {
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+
+        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath)) {
+            return CoResponse.CANNOT_CHANGE_FILE_LOCKED(change.filePath)
+        }
+
+        WriteCommandAction.runWriteCommandAction(project) {
+            coeditPlugin.lockHandler.disableHandler(change.filePath)
+            val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
+            file?.rename(project, change.newName)
+        }
+
         return CoResponse.OK
     }
 

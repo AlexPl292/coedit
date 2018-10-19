@@ -22,7 +22,7 @@ class Utils {
 
         fun getRelativePath(document: Document, project: Project): String {
             val file = FileDocumentManager.getInstance().getFile(document)
-                    ?: throw RuntimeException("Cannot access document")
+                    ?: throw RuntimeException("Cannot access document $document")
             return getRelativePath(file, project)
         }
 
@@ -30,7 +30,7 @@ class Utils {
             val root = ProjectFileIndex.getInstance(project).getContentRootForFile(file)
                     ?: throw RuntimeException("Cannot detect root of project for ${file.path}")
             return VfsUtilCore.getRelativePath(file, root)
-                    ?: throw RuntimeException("Cannot get relative path for file")
+                    ?: throw RuntimeException("Cannot get relative path for for ${file.path}")
         }
 
 

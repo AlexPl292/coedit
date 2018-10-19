@@ -2,6 +2,7 @@ package coedit
 
 import coedit.connection.CoeditConnection
 import coedit.connection.protocol.CoRequestFileCreation
+import coedit.connection.protocol.CoRequestFileDeletion
 import coedit.listener.ChangeListener
 import coedit.model.LockHandler
 import com.intellij.openapi.application.ApplicationManager
@@ -11,8 +12,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.util.messages.MessageBusConnection
+import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -44,7 +47,14 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
             override fun before(events: MutableList<out VFileEvent>) {
                 events.forEach {
                     if (it is VFileCreateEvent) {
-                        myConn.send(CoRequestFileCreation(it.path.removePrefix(myBasePath).substring(1), it.isDirectory))
+                        val relativePath = File(myBasePath).toURI().relativize(File(it.path).toURI()).path
+                        myConn.send(CoRequestFileCreation(relativePath, it.isDirectory))
+                    } else if (it is VFileDeleteEvent) {
+                        val relativePath = File(myBasePath).toURI().relativize(File(it.path).toURI()).path
+                        val isDirectory = it.file.isDirectory
+
+                        // TODO **DO NOT DELETE FILE IN CASE OF BAD RESPONSE**
+                        myConn.send(CoRequestFileDeletion(relativePath, isDirectory))
                     }
                 }
             }

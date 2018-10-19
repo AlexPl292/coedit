@@ -23,6 +23,7 @@ class ChangesService(private val project: Project) {
             is CoRequestTryLock -> tryLock(change)
             is CoRequestUnlock -> unlock(change)
             is CoRequestStopCollaboration -> stopCollaboration(change)
+            is CoRequestFileDeletion -> deleteFile(change)
             else -> CoResponse.ERROR
         }
         val coeditPlugin = CoeditPlugin.getInstance(project)
@@ -40,6 +41,17 @@ class ChangesService(private val project: Project) {
             file.createNewFile()
         }
 
+        return CoResponse.OK
+    }
+
+    private fun deleteFile(change: CoRequestFileDeletion): CoResponse {
+        val coeditPlugin = CoeditPlugin.getInstance(project)
+
+        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath)) {
+            return CoResponse.CANNOT_DELETE_FILE_LOCKED(change.filePath)
+        }
+        val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
+        file?.delete(project)
         return CoResponse.OK
     }
 

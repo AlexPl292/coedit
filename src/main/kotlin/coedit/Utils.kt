@@ -28,7 +28,7 @@ class Utils {
 
         fun getRelativePath(file: VirtualFile, project: Project): String {
             val root = ProjectFileIndex.getInstance(project).getContentRootForFile(file)
-                    ?: throw RuntimeException("Cannot detect root of project")
+                    ?: throw RuntimeException("Cannot detect root of project for ${file.path}")
             return VfsUtilCore.getRelativePath(file, root)
                     ?: throw RuntimeException("Cannot get relative path for file")
         }

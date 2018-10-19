@@ -28,5 +28,9 @@ data class CoResponse(
         val CANNOT_LOCK_FILE_ALREADY_LOCKED = CoResponse(502, "Cannot lock file. This file is already locked")
         val CANNOT_LOCK_FILE_MISSING = CoResponse(503, "Cannot lock file. File missing")
         val CANNOT_UNLOCK_FILE = CoResponse(503, "Cannot lock file")
+
+        fun CANNOT_DELETE_FILE_LOCKED(path: String): CoResponse {
+            return CoResponse(504, "Cannot delete file. Path: $path")
+        }
     }
 }

@@ -13,6 +13,11 @@ data class CoRequestFileCreation(
         val isDirectory: Boolean
 ) : CoRequest
 
+data class CoRequestFileDeletion(
+        val filePath: String,
+        val isDirectory: Boolean
+) : CoRequest
+
 data class CoPatch(
         val offset: Int,
         val oldLength: Int,

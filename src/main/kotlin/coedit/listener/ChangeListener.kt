@@ -7,6 +7,7 @@ import coedit.connection.protocol.CoRequestFileEdit
 import coedit.connection.protocol.CoRequestTryLock
 import coedit.connection.protocol.CoRequestUnlock
 import coedit.model.LockState
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.project.Project
@@ -30,7 +31,9 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
 
         val lockHandler = coeditPlugin.lockHandler
         if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT || !coeditPlugin.editing.get()) {
-            event.document.removeDocumentListener(this)
+            ApplicationManager.getApplication().runReadAction {
+                event.document.removeDocumentListener(this)
+            }
             return
         }
         if (lockHandler.stateOf(relativePath) != LockState.LOCKED_BY_ME) {

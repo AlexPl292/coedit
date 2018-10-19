@@ -142,7 +142,9 @@ class CoeditConnection {
 
     fun response(response: CoResponse) {
         log.debug("Response ", response)
-        objectOutputStream?.writeObject(response)
+        if (myClientSocket?.isClosed != true && myServerSocket?.isClosed != true) {
+            objectOutputStream?.writeObject(response)
+        }
     }
 
 }

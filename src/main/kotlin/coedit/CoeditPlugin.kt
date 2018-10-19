@@ -17,7 +17,6 @@ import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
 import com.intellij.util.messages.MessageBusConnection
-import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -52,18 +51,18 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
                         return
                     }
                     if (it is VFileCreateEvent) {
-                        val relativePath = File(myBasePath).toURI().relativize(File(it.path).toURI()).path
+                        val relativePath = Utils.getRelativePath(it.path, myProject)
                         if (lockHandler.stateOf(relativePath) == null) {
                             myConn.send(CoRequestFileCreation(relativePath, it.isDirectory))
                         }
                     } else if (it is VFileDeleteEvent) {
-                        val relativePath = File(myBasePath).toURI().relativize(File(it.path).toURI()).path
+                        val relativePath = Utils.getRelativePath(it.path, myProject)
                         val isDirectory = it.file.isDirectory
 
                         // TODO **DO NOT DELETE FILE IN CASE OF BAD RESPONSE**
                         myConn.send(CoRequestFileDeletion(relativePath, isDirectory))
                     } else if (it is VFilePropertyChangeEvent && it.propertyName == "name") {
-                        val relativePath = File(myBasePath).toURI().relativize(File(it.path).toURI()).path
+                        val relativePath = Utils.getRelativePath(it.path, myProject)
                         val newName = it.newValue as String
                         val isDirectory = it.file.isDirectory
 

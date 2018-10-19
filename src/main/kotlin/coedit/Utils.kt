@@ -1,15 +1,15 @@
 package coedit
 
 import coedit.listener.ChangeListener
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
+import java.io.File
 
 /**
  * Created by Alex Plate on 18.10.2018.
@@ -23,26 +23,16 @@ class Utils {
         fun getRelativePath(document: Document, project: Project): String {
             val file = FileDocumentManager.getInstance().getFile(document)
                     ?: throw RuntimeException("Cannot access document $document")
-            return getRelativePath(file, project)
+            return getRelativePath(file.path, project)
         }
 
-        fun getRelativePath(file: VirtualFile, project: Project): String {
-            val root = ProjectFileIndex.getInstance(project).getContentRootForFile(file)
-                    ?: throw RuntimeException("Cannot detect root of project for ${file.path}")
-            return VfsUtilCore.getRelativePath(file, root)
-                    ?: throw RuntimeException("Cannot get relative path for for ${file.path}")
-        }
-
-
-        fun registerListener(virtualFile: VirtualFile, listener: DocumentListener) {
-            registerListener(FileDocumentManager.getInstance().getDocument(virtualFile), listener)
+        fun getRelativePath(filePath: String, project: Project): String {
+            return File(project.basePath).toURI().relativize(File(filePath).toURI()).path
         }
 
         fun registerListener(document: Document?, listener: DocumentListener) {
-            try {
+            ApplicationManager.getApplication().runReadAction {
                 document?.addDocumentListener(listener)
-            } catch (e: Throwable) {
-                // Nothing. This listener is already registered
             }
         }
 
@@ -51,10 +41,8 @@ class Utils {
         }
 
         fun unregisterListener(document: Document?, listener: DocumentListener) {
-            try {
+            ApplicationManager.getApplication().runReadAction {
                 document?.removeDocumentListener(listener)
-            } catch (e: Throwable) {
-                // Nothing. There is no such listener
             }
         }
 
@@ -64,10 +52,12 @@ class Utils {
         }
 
         fun removeAllGuardedBlocks(document: Document) {
-            while (true) {
-                // Well, I have no idea, how can I get all guard blocks in another way
-                val guard = document.getRangeGuard(0, document.textLength) ?: break
-                document.removeGuardedBlock(guard)
+            ApplicationManager.getApplication().runReadAction {
+                while (true) {
+                    // Well, I have no idea, how can I get all guard blocks in another way
+                    val guard = document.getRangeGuard(0, document.textLength) ?: break
+                    document.removeGuardedBlock(guard)
+                }
             }
         }
 

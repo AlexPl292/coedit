@@ -42,10 +42,10 @@ class StartServerDialog(val project: Project) : DialogWrapper(project) {
         val constraints = GridBagConstraints()
         constraints.fill = GridBagConstraints.HORIZONTAL
 
-        constraints.gridx = 0;
-        constraints.gridy = 0;
+        constraints.gridx = 0
+        constraints.gridy = 0
         panel.add(JLabel("Port (8089) "), constraints)
-        constraints.gridx = 1;
+        constraints.gridx = 1
         panel.add(portInput, constraints)
 
         return panel

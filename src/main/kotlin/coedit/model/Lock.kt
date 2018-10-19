@@ -15,7 +15,7 @@ enum class LockState {
     LOCKED_FOR_EDIT, LOCKED_BY_ME, DISABLE_HANDLER
 }
 
-class LockHandler(val project: Project, val basePath: String) {
+class LockHandler(val project: Project, private val basePath: String) {
     private val locks: MutableMap<String, LockState>
 
     init {

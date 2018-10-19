@@ -28,7 +28,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     val myConn: CoeditConnection = CoeditConnection()
     val myBasePath = myProject.basePath ?: throw RuntimeException("Cannot detect base path of project")
     val lockHandler = LockHandler(myProject, myBasePath)
-    var messageBusConnection: MessageBusConnection? = null
+    private var messageBusConnection: MessageBusConnection? = null
 
     val editing: AtomicBoolean = AtomicBoolean(false)
 

@@ -4,10 +4,14 @@ import coedit.CoeditPlugin
 import coedit.connection.protocol.CoRequest
 import coedit.connection.protocol.CoResponse
 import coedit.service.ChangesService
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationType
+import com.intellij.notification.Notifications
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import java.net.ConnectException
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ArrayBlockingQueue
@@ -53,6 +57,7 @@ class CoeditConnection {
             val coeditPlugin1 = CoeditPlugin.getInstance(project)
             coeditPlugin1.editing.set(true)
             coeditPlugin1.lockHandler.clear()
+            Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Connection! Start work", NotificationType.INFORMATION))
 
 
             if (myClientSocket == null) {
@@ -71,7 +76,14 @@ class CoeditConnection {
         if (coeditPlugin.editing.get()) {
             return
         }
-        val socket = Socket(myHost, myPort)
+        val socket: Socket
+        try {
+            socket = Socket(myHost, myPort)
+        } catch (e: ConnectException) {
+            Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Cannot connect to server", NotificationType.ERROR))
+            return
+        }
+        Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Connected to server", NotificationType.INFORMATION))
 
         objectOutputStream = ObjectOutputStream(socket.getOutputStream())
         objectInputStream = ObjectInputStream(socket.getInputStream())
@@ -86,6 +98,7 @@ class CoeditConnection {
         serverThread?.interrupt()
         objectOutputStream?.close()
         objectInputStream?.close()
+        Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Stop work", NotificationType.INFORMATION))
     }
 
     private fun startReading(project: Project) {

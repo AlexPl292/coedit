@@ -1,8 +1,12 @@
 package coedit.action
 
 import coedit.CoeditPlugin
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationType
+import com.intellij.notification.Notifications
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.ui.Messages
+
+
 
 
 /**
@@ -21,7 +25,7 @@ class StartServer : SetUpConnectionAction("StartServer") {
 
         super.actionPerformed(e)
 
-        Messages.showMessageDialog(project, "Server started", "Greeting", Messages.getInformationIcon())
+        Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Waiting for connections", NotificationType.INFORMATION))
     }
 
     override fun update(e: AnActionEvent?) {

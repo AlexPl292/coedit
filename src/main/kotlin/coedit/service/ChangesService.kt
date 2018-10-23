@@ -41,6 +41,7 @@ class ChangesService(private val project: Project) {
             } else {
                 file.parentFile.mkdirs()
                 file.createNewFile()
+                LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)
             }
         }
 

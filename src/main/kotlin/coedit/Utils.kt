@@ -37,7 +37,7 @@ class Utils {
         fun removeAllGuardedBlocks(document: Document) {
             ApplicationManager.getApplication().runReadAction {
                 if (document is DocumentImpl) {
-                    document.guardedBlocks.forEach { document.removeGuardedBlock(it) }
+                    document.guardedBlocks.clear()
                 }
             }
         }
@@ -54,7 +54,9 @@ class Utils {
             coeditPlugin.lockHandler.allLockedFiles().forEach {
                 val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)?.findChild(it)
                 if (file != null) {
-                    Utils.removeAllGuardedBlocks(file)
+                    ApplicationManager.getApplication().runReadAction {
+                        Utils.removeAllGuardedBlocks(file)
+                    }
                 }
             }
         }

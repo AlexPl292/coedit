@@ -11,16 +11,13 @@ import com.intellij.openapi.actionSystem.AnActionEvent
  */
 class StartServer : AnAction("StartServer") {
     override fun actionPerformed(e: AnActionEvent?) {
-        if (e == null) {
-            throw RuntimeException("IntelliJ IDEA error. Cannot get action event")
-        }
-        val project = e.project ?: return
+        val project = e?.project ?: throw RuntimeException("IntelliJ IDEA error. Cannot get action event")
 
         StartServerDialog(project).show()
     }
 
     override fun update(e: AnActionEvent?) {
-        val project = e?.project ?: return
+        val project = e?.project ?: throw RuntimeException("IntelliJ IDEA error. Cannot get action event")
 
         val coeditPlugin = CoeditPlugin.getInstance(project)
         e.presentation.isEnabled = !coeditPlugin.editing.get() && !coeditPlugin.myConn.waitForConnection.get()

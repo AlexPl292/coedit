@@ -55,8 +55,9 @@ class ChangesService(private val project: Project) {
         }
         WriteCommandAction.runWriteCommandAction(project) {
             coeditPlugin.lockHandler.disableHandler(change.filePath)
-            val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
-            file?.delete(project)
+            LocalFileSystem.getInstance()
+                    .findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
+                    ?.delete(project)
         }
         return CoResponse.OK
     }
@@ -70,8 +71,8 @@ class ChangesService(private val project: Project) {
 
         WriteCommandAction.runWriteCommandAction(project) {
             coeditPlugin.lockHandler.disableHandler(change.filePath)
-            val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
-            file?.rename(project, change.newName)
+            LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
+                    ?.rename(project, change.newName)
         }
 
         return CoResponse.OK

@@ -29,13 +29,13 @@ class CoeditConnection {
 
     var myPort = 8089
     var myHost = "localhost"
-    private var myServerSocket: ServerSocket? = null
-    private var myClientSocket: Socket? = null
+    private lateinit var myServerSocket: ServerSocket
+    private lateinit var myClientSocket: Socket
 
-    private var objectOutputStream: ObjectOutputStream? = null
-    private var objectInputStream: ObjectInputStream? = null
+    private lateinit var objectOutputStream: ObjectOutputStream
+    private lateinit var objectInputStream: ObjectInputStream
 
-    private var serverThread: Thread? = null
+    private lateinit var serverThread: Thread
 
     private val responseQueue: BlockingQueue<CoResponse> = ArrayBlockingQueue(1)
 
@@ -53,23 +53,19 @@ class CoeditConnection {
 
         serverThread = Thread(Runnable {
             Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Waiting for connections", NotificationType.INFORMATION))
-            myClientSocket = myServerSocket?.accept()
+            myClientSocket = myServerSocket.accept()
             waitForConnection.set(false)
             val coeditPlugin1 = CoeditPlugin.getInstance(project)
             coeditPlugin1.editing.set(true)
             coeditPlugin1.lockHandler.clear()
             Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Connection! Start work", NotificationType.INFORMATION))
 
-
-            if (myClientSocket == null) {
-                throw RuntimeException("Client socket is null")
-            }
-            objectInputStream = ObjectInputStream(myClientSocket?.getInputStream())
-            objectOutputStream = ObjectOutputStream(myClientSocket?.getOutputStream())
+            objectInputStream = ObjectInputStream(myClientSocket.getInputStream())
+            objectOutputStream = ObjectOutputStream(myClientSocket.getOutputStream())
 
             startReading(project)
         })
-        serverThread?.start()
+        serverThread.start()
     }
 
     fun connectToServer(project: Project) {
@@ -90,15 +86,15 @@ class CoeditConnection {
         objectInputStream = ObjectInputStream(socket.getInputStream())
 
         serverThread = Thread(Runnable { startReading(project) })
-        serverThread?.start()
+        serverThread.start()
         coeditPlugin.editing.set(true)
         coeditPlugin.lockHandler.clear()
     }
 
     fun stopWork() {
-        serverThread?.interrupt()
-        objectOutputStream?.close()
-        objectInputStream?.close()
+        serverThread.interrupt()
+        objectOutputStream.close()
+        objectInputStream.close()
         Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Stop work", NotificationType.INFORMATION))
     }
 
@@ -109,12 +105,12 @@ class CoeditConnection {
                 objectInputStream.use { inStream ->
                     objectOutputStream.use { _ ->
                         while (true) {
-                            if (Thread.interrupted()) break;
+                            if (Thread.interrupted()) break
                             log.debug("Wait for incoming requests")
-                            val request = inStream?.readObject()
+                            val request = inStream.readObject()
                             log.debug("Got request. ", request)
 
-                            if (Thread.interrupted()) break;
+                            if (Thread.interrupted()) break
 
                             if (request is CoResponse) {
                                 responseQueue.put(request)
@@ -130,7 +126,7 @@ class CoeditConnection {
 
     fun send(request: CoRequest): CoResponse {
         log.debug("Sending object. ", request)
-        objectOutputStream?.writeObject(request)
+        objectOutputStream.writeObject(request)
 
         log.debug("Waiting for response...")
         val coResponse = responseQueue.poll(1, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
@@ -146,8 +142,8 @@ class CoeditConnection {
 
     fun response(response: CoResponse) {
         log.debug("Response ", response)
-        if (myClientSocket?.isClosed != true && myServerSocket?.isClosed != true) {
-            objectOutputStream?.writeObject(response)
+        if (!myClientSocket.isClosed && !myServerSocket.isClosed) {
+            objectOutputStream.writeObject(response)
         }
     }
 

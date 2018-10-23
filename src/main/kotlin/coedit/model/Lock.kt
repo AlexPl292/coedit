@@ -51,6 +51,7 @@ class LockHandler(val project: Project, private val basePath: String) {
 
         ApplicationManager.getApplication().runReadAction {
             val document = FileDocumentManager.getInstance().getDocument(file)
+            // TODO NONONO!!!
             Utils.unregisterListener(document, ChangeListener(project))
             document?.createGuardedBlock(0, document.textLength)
         }

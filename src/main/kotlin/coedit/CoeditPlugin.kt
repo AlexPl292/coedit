@@ -28,7 +28,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     val myConn: CoeditConnection = CoeditConnection()
     val myBasePath = myProject.basePath ?: throw RuntimeException("Cannot detect base path of project")
     val lockHandler = LockHandler(myProject, myBasePath)
-    private var messageBusConnection: MessageBusConnection? = null
+    private lateinit var messageBusConnection: MessageBusConnection
 
     val editing: AtomicBoolean = AtomicBoolean(false)
 
@@ -44,7 +44,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     fun subscribeToMessageBus() {
         EditorFactory.getInstance().eventMulticaster.addDocumentListener(ChangeListener(myProject))
         messageBusConnection = ApplicationManager.getApplication().messageBus.connect()
-        messageBusConnection?.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
+        messageBusConnection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
             override fun before(events: MutableList<out VFileEvent>) {
                 events.forEach {
                     if (lockHandler.handleDisabledAndReset(it.path)) {
@@ -75,6 +75,8 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
     fun disconnectMessageBus() {
         EditorFactory.getInstance().eventMulticaster.removeDocumentListener(ChangeListener(myProject))
-        messageBusConnection?.disconnect()
+        if (this::messageBusConnection.isInitialized) {
+            messageBusConnection.disconnect()
+        }
     }
 }

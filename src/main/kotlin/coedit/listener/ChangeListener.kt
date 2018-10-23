@@ -29,7 +29,8 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
         val lockHandler = coeditPlugin.lockHandler
         if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT
                 || !coeditPlugin.editing.get()
-                || FileDocumentManager.getInstance().getFile(event.document) is LightVirtualFile) {
+                || FileDocumentManager.getInstance().getFile(event.document) is LightVirtualFile
+                || coeditPlugin.isIgnored(relativePath)) {
             return
         }
 

@@ -32,6 +32,9 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
 
     val editing: AtomicBoolean = AtomicBoolean(false)
 
+    // Very simple implementation of .ignore. Ignore files and dirs if path returns true on startsWith
+    val coIgnore = listOf(".idea")
+
     companion object {
         fun getInstance(project: Project): CoeditPlugin {
             return project.getComponent(CoeditPlugin::class.java)
@@ -41,6 +44,10 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     override fun projectOpened() {
     }
 
+    fun isIgnored(relativePath: String): Boolean {
+        return coIgnore.any { relativePath.startsWith(it) }
+    }
+
     fun subscribeToMessageBus() {
         EditorFactory.getInstance().eventMulticaster.addDocumentListener(ChangeListener(myProject))
         messageBusConnection = ApplicationManager.getApplication().messageBus.connect()
@@ -48,7 +55,7 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
             override fun before(events: MutableList<out VFileEvent>) {
                 events.forEach {
                     val relativePath = Utils.getRelativePath(it.path, myProject)
-                    if (lockHandler.handleDisabledAndReset(relativePath)) {
+                    if (lockHandler.handleDisabledAndReset(relativePath) || isIgnored(relativePath)) {
                         return
                     }
                     if (it is VFileCreateEvent) {

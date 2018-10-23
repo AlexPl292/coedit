@@ -73,17 +73,16 @@ class CoeditConnection {
         if (coeditPlugin.editing.get()) {
             return
         }
-        val socket: Socket
         try {
-            socket = Socket(myHost, myPort)
+            myClientSocket = Socket(myHost, myPort)
         } catch (e: ConnectException) {
             Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Cannot connect to server", NotificationType.ERROR))
             return
         }
         Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Connected to server", NotificationType.INFORMATION))
 
-        objectOutputStream = ObjectOutputStream(socket.getOutputStream())
-        objectInputStream = ObjectInputStream(socket.getInputStream())
+        objectOutputStream = ObjectOutputStream(myClientSocket.getOutputStream())
+        objectInputStream = ObjectInputStream(myClientSocket.getInputStream())
 
         serverThread = Thread(Runnable { startReading(project) })
         serverThread.start()
@@ -95,32 +94,28 @@ class CoeditConnection {
         serverThread.interrupt()
         objectOutputStream.close()
         objectInputStream.close()
+        myClientSocket.close()
+        if (this::myServerSocket.isInitialized) {
+            myServerSocket.close()
+        }
         Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Stop work", NotificationType.INFORMATION))
     }
 
     private fun startReading(project: Project) {
         val changesService = ChangesService(project)
-        myServerSocket.use { _ ->
-            myClientSocket.use { _ ->
-                objectInputStream.use { inStream ->
-                    objectOutputStream.use { _ ->
-                        while (true) {
-                            if (Thread.interrupted()) break
-                            log.debug("Wait for incoming requests")
-                            val request = inStream.readObject()
-                            log.debug("Got request. ", request)
+        while (true) {
+            if (Thread.interrupted()) break
+            log.debug("Wait for incoming requests")
+            val request = objectInputStream.readObject()
+            log.debug("Got request. ", request)
 
-                            if (Thread.interrupted()) break
+            if (Thread.interrupted()) break
 
-                            if (request is CoResponse) {
-                                responseQueue.put(request)
-                                continue
-                            }
-                            changesService.handleChange(request as CoRequest)
-                        }
-                    }
-                }
+            if (request is CoResponse) {
+                responseQueue.put(request)
+                continue
             }
+            changesService.handleChange(request as CoRequest)
         }
     }
 
@@ -142,7 +137,7 @@ class CoeditConnection {
 
     fun response(response: CoResponse) {
         log.debug("Response ", response)
-        if (!myClientSocket.isClosed && !myServerSocket.isClosed) {
+        if (!myClientSocket.isClosed) {
             objectOutputStream.writeObject(response)
         }
     }

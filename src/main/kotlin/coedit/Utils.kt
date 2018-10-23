@@ -1,10 +1,8 @@
 package coedit
 
-import coedit.listener.ChangeListener
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -28,22 +26,6 @@ class Utils {
 
         fun getRelativePath(filePath: String, project: Project): String {
             return File(project.basePath).toURI().relativize(File(filePath).toURI()).path
-        }
-
-        fun registerListener(document: Document?, listener: DocumentListener) {
-            ApplicationManager.getApplication().runReadAction {
-                document?.addDocumentListener(listener)
-            }
-        }
-
-        fun unregisterListener(virtualFile: VirtualFile, listener: DocumentListener) {
-            unregisterListener(FileDocumentManager.getInstance().getDocument(virtualFile), listener)
-        }
-
-        fun unregisterListener(document: Document?, listener: DocumentListener) {
-            ApplicationManager.getApplication().runReadAction {
-                document?.removeDocumentListener(listener)
-            }
         }
 
         fun removeAllGuardedBlocks(file: VirtualFile) {
@@ -73,7 +55,6 @@ class Utils {
             coeditPlugin.lockHandler.allLockedFiles().forEach {
                 val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)?.findChild(it)
                 if (file != null) {
-                    Utils.unregisterListener(file, ChangeListener(project))
                     Utils.removeAllGuardedBlocks(file)
                 }
             }

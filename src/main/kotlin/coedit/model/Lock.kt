@@ -1,7 +1,6 @@
 package coedit.model
 
 import coedit.Utils
-import coedit.listener.ChangeListener
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -51,8 +50,6 @@ class LockHandler(val project: Project, private val basePath: String) {
 
         ApplicationManager.getApplication().runReadAction {
             val document = FileDocumentManager.getInstance().getDocument(file)
-            // TODO NONONO!!!
-            Utils.unregisterListener(document, ChangeListener(project))
             document?.createGuardedBlock(0, document.textLength)
         }
 
@@ -109,9 +106,6 @@ class LockHandler(val project: Project, private val basePath: String) {
             if (document != null) {
                 if (status == LockState.LOCKED_FOR_EDIT) {
                     Utils.removeAllGuardedBlocks(document)
-                }
-                if (status != LockState.LOCKED_BY_ME) {
-                    Utils.registerListener(document, ChangeListener(project))
                 }
             }
         }

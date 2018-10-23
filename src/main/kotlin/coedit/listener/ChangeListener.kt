@@ -7,10 +7,11 @@ import coedit.connection.protocol.CoRequestFileEdit
 import coedit.connection.protocol.CoRequestTryLock
 import coedit.connection.protocol.CoRequestUnlock
 import coedit.model.LockState
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.testFramework.LightVirtualFile
 
 /**
  * Created by Alex Plate on 17.10.2018.
@@ -25,17 +26,13 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
         val relativePath = Utils.getRelativePath(event.document, project)
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
-        if (!coeditPlugin.editing.get()) {
+        val lockHandler = coeditPlugin.lockHandler
+        if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT
+                || !coeditPlugin.editing.get()
+                || FileDocumentManager.getInstance().getFile(event.document) is LightVirtualFile) {
             return
         }
 
-        val lockHandler = coeditPlugin.lockHandler
-        if (lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT || !coeditPlugin.editing.get()) {
-            ApplicationManager.getApplication().runReadAction {
-                event.document.removeDocumentListener(this)
-            }
-            return
-        }
         if (lockHandler.stateOf(relativePath) != LockState.LOCKED_BY_ME) {
             val contentHashCode = event.document.text.hashCode()
             val lockedByMe = lockHandler.lockedByMe()

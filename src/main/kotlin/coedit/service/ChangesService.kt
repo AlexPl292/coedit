@@ -4,6 +4,7 @@ import coedit.CoeditPlugin
 import coedit.Utils
 import coedit.connection.protocol.*
 import coedit.model.LockHandler
+import coedit.model.LockState
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -51,7 +52,7 @@ class ChangesService(private val project: Project) {
     private fun deleteFile(change: CoRequestFileDeletion): CoResponse {
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
-        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath)) {
+        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath, LockState.LOCKED_BY_ME) || !change.isDirectory && coeditPlugin.lockHandler.stateOf(change.filePath) == LockState.LOCKED_BY_ME) {
             return CoResponse.CANNOT_CHANGE_FILE_LOCKED(change.filePath)
         }
         WriteCommandAction.runWriteCommandAction(project) {
@@ -66,7 +67,7 @@ class ChangesService(private val project: Project) {
     private fun renameFile(change: CoRequestFileRename): CoResponse {
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
-        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath)) {
+        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath, LockState.LOCKED_BY_ME)) {
             return CoResponse.CANNOT_CHANGE_FILE_LOCKED(change.filePath)
         }
 

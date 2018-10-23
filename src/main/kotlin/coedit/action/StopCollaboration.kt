@@ -19,7 +19,7 @@ class StopCollaboration : AnAction("StopCollaboration") {
 
         val coeditPlugin = CoeditPlugin.getInstance(project)
         log.debug("Stop connection..")
-        coeditPlugin.myConn.send(CoRequestStopCollaboration())
+        coeditPlugin.myConn.sendAndWaitForResponse(CoRequestStopCollaboration())
         Utils.stopWork(project)
     }
 

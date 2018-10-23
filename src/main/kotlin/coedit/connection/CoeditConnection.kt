@@ -119,7 +119,7 @@ class CoeditConnection {
         }
     }
 
-    fun send(request: CoRequest): CoResponse {
+    fun sendAndWaitForResponse(request: CoRequest): CoResponse {
         log.debug("Sending object. ", request)
         objectOutputStream.writeObject(request)
 

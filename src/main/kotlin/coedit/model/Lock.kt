@@ -131,7 +131,7 @@ class LockHandler(val project: Project, private val basePath: String) {
     /**
      * Some of files in given dir are locked
      */
-    fun locksInDir(folderPath: String): Boolean {
-        return locks.keys.any { it.startsWith(folderPath) }
+    fun locksInDir(folderPath: String, state: LockState): Boolean {
+        return locks.keys.any { it.startsWith(folderPath) && locks[it] == state }
     }
 }

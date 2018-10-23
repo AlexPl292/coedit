@@ -47,22 +47,20 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
         messageBusConnection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
             override fun before(events: MutableList<out VFileEvent>) {
                 events.forEach {
-                    if (lockHandler.handleDisabledAndReset(it.path)) {
+                    val relativePath = Utils.getRelativePath(it.path, myProject)
+                    if (lockHandler.handleDisabledAndReset(relativePath)) {
                         return
                     }
                     if (it is VFileCreateEvent) {
-                        val relativePath = Utils.getRelativePath(it.path, myProject)
                         if (lockHandler.stateOf(relativePath) == null) {
                             myConn.send(CoRequestFileCreation(relativePath, it.isDirectory))
                         }
                     } else if (it is VFileDeleteEvent) {
-                        val relativePath = Utils.getRelativePath(it.path, myProject)
                         val isDirectory = it.file.isDirectory
 
                         // TODO **DELETE FILE IN CASE OF BAD RESPONSE**
                         myConn.send(CoRequestFileDeletion(relativePath, isDirectory))
                     } else if (it is VFilePropertyChangeEvent && it.propertyName == "name") {
-                        val relativePath = Utils.getRelativePath(it.path, myProject)
                         val newName = it.newValue as String
                         val isDirectory = it.file.isDirectory
 

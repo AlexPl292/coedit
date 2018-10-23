@@ -29,7 +29,7 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
         if (dir == null) {
             throw RuntimeException("IntelliJ IDEA error. Cannot get deleted file")
         }
-        val relativePath = Utils.getRelativePath(dir.path, project)
+        val relativePath = Utils.getRelativePath(dir.path, project) + name
         val coeditPlugin = CoeditPlugin.getInstance(project)
         if (coeditPlugin.lockHandler.handleDisabledAndReset(relativePath) || coeditPlugin.isIgnored(relativePath)) {
             return false

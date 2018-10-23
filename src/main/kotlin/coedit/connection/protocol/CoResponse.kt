@@ -7,7 +7,8 @@ import java.io.Serializable
  */
 data class CoResponse(
         val code: Int,
-        val message: String
+        val message: String,
+        val requestUuid: String? = null
 ) : Serializable {
     companion object {
 

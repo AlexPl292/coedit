@@ -39,15 +39,15 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
             val lockedByMe = lockHandler.lockedByMe()
             lockedByMe.forEach {
                 lockHandler.unlock(it)
-                coeditPlugin.myConn.sendAndWaitForResponse(CoRequestUnlock(it))
+                coeditPlugin.myConn.send(CoRequestUnlock(it))
             }
 
-            coeditPlugin.myConn.sendAndWaitForResponse(CoRequestTryLock(relativePath, contentHashCode))
+            coeditPlugin.myConn.send(CoRequestTryLock(relativePath, contentHashCode))
             lockHandler.lockByMe(relativePath)
         }
 
         val patch = CoPatch(event.offset, event.oldLength, event.newFragment.toString())
 
-        CoeditPlugin.getInstance(project).myConn.sendAndWaitForResponse(CoRequestFileEdit(relativePath, patch))
+        CoeditPlugin.getInstance(project).myConn.send(CoRequestFileEdit(relativePath, patch))
     }
 }

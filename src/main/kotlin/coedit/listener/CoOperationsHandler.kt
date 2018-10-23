@@ -5,7 +5,11 @@ import coedit.Utils
 import coedit.connection.protocol.CoRequestFileCreation
 import coedit.connection.protocol.CoRequestFileDeletion
 import coedit.connection.protocol.CoRequestFileRename
+import coedit.connection.protocol.CoResponse
 import coedit.model.LockState
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationType
+import com.intellij.notification.Notifications
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileOperationsHandler
 import com.intellij.openapi.vfs.VirtualFile
@@ -31,7 +35,11 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
             return false
         }
         if (coeditPlugin.lockHandler.stateOf(relativePath) == null) {
-            coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, false))
+            val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, false))
+            if (response.code != CoResponse.OK.code) {
+                Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot create file. Response $response", NotificationType.ERROR))
+                return true
+            }
         }
         return false
     }
@@ -50,7 +58,8 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
         coeditPlugin.lockHandler.lockByMe(relativePath)
         val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileRename(relativePath, newName, isDirectory))
 
-        if (response.code != 200) {
+        if (response.code != CoResponse.OK.code) {
+            Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot rename file. Response $response", NotificationType.ERROR))
             coeditPlugin.lockHandler.unlock(relativePath)
             return true
         }
@@ -77,7 +86,11 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
             return false
         }
         if (coeditPlugin.lockHandler.stateOf(relativePath) == null) {
-            coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, true))
+            val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, true))
+            if (response.code != CoResponse.OK.code) {
+                Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot create directory. Response $response", NotificationType.ERROR))
+                return true
+            }
         }
         return false
     }
@@ -110,12 +123,12 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
         coeditPlugin.lockHandler.lockByMe(relativePath)
 
         val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileDeletion(relativePath, isDirectory))
-        if (response.code != 200) {
+        if (response.code != CoResponse.OK.code) {
+            Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot delete file. Response $response", NotificationType.ERROR))
             coeditPlugin.lockHandler.unlock(relativePath)
             return true
         }
         coeditPlugin.lockHandler.unlock(relativePath)
         return false
     }
-
 }

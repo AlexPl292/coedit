@@ -14,6 +14,7 @@ import java.io.ObjectOutputStream
 import java.net.ConnectException
 import java.net.ServerSocket
 import java.net.Socket
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
@@ -112,7 +113,9 @@ class CoeditConnection {
             if (Thread.interrupted()) break
 
             if (request is CoResponse) {
-                responseQueue.put(request)
+                if (request.requestUuid != null) {
+                    responseQueue.put(request)
+                }
                 continue
             }
             changesService.handleChange(request as CoRequest)
@@ -121,10 +124,15 @@ class CoeditConnection {
 
     fun sendAndWaitForResponse(request: CoRequest): CoResponse {
         log.debug("Sending object. ", request)
+        request.requestUuid = UUID.randomUUID().toString()
         objectOutputStream.writeObject(request)
 
         log.debug("Waiting for response...")
-        val coResponse = responseQueue.poll(1, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
+        val coResponse = responseQueue.poll(5, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
+        if (coResponse.requestUuid != request.requestUuid) {
+            log.error("Response for wrong request")
+            return CoResponse.CONTINUE
+        }
         log.debug("Got response. ", coResponse)
 
         if (coResponse == CoResponse.ERROR) {
@@ -133,6 +141,12 @@ class CoeditConnection {
         }
 
         return coResponse
+    }
+
+    fun send(request: CoRequest) {
+        log.debug("Sending object without waiting for response", request)
+        request.requestUuid = null
+        objectOutputStream.writeObject(request)
     }
 
     fun response(response: CoResponse) {

@@ -20,7 +20,7 @@ class StopEditingAction : AnAction("StopEditingAction") {
         lockedByMe.forEach {
             lockHandler.unlock(it)
 
-            coeditPlugin.myConn.sendAndWaitForResponse(CoRequestUnlock(it))
+            coeditPlugin.myConn.send(CoRequestUnlock(it))
         }
     }
 

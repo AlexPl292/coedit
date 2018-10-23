@@ -6,23 +6,26 @@ import java.io.Serializable
  * Created by Alex Plate on 17.10.2018.
  */
 
-interface CoRequest : Serializable
+abstract class CoRequest(open var requestUuid: String?) : Serializable
 
 data class CoRequestFileCreation(
         val filePath: String,
-        val isDirectory: Boolean
-) : CoRequest
+        val isDirectory: Boolean,
+        override var requestUuid: String? = null
+) : CoRequest(requestUuid)
 
 data class CoRequestFileDeletion(
         val filePath: String,
-        val isDirectory: Boolean
-) : CoRequest
+        val isDirectory: Boolean,
+        override var requestUuid: String? = null
+) : CoRequest(requestUuid)
 
 data class CoRequestFileRename(
         val filePath: String,
         val newName: String,
-        val isDirectory: Boolean
-) : CoRequest
+        val isDirectory: Boolean,
+        override var requestUuid: String? = null
+) : CoRequest(requestUuid)
 
 data class CoPatch(
         val offset: Int,
@@ -32,16 +35,21 @@ data class CoPatch(
 
 data class CoRequestFileEdit(
         val filePath: String,
-        val patch: CoPatch
-) : CoRequest
+        val patch: CoPatch,
+        override var requestUuid: String? = null
+) : CoRequest(requestUuid)
 
 data class CoRequestTryLock(
         val filePath: String,
-        val contentHashCode: Int
-) : CoRequest
+        val contentHashCode: Int,
+        override var requestUuid: String? = null
+) : CoRequest(requestUuid)
 
 data class CoRequestUnlock(
-        val filePath: String
-) : CoRequest
+        val filePath: String,
+        override var requestUuid: String? = null
+) : CoRequest(requestUuid)
 
-class CoRequestStopCollaboration : CoRequest
+class CoRequestStopCollaboration(
+        override var requestUuid: String? = null
+) : CoRequest(requestUuid)

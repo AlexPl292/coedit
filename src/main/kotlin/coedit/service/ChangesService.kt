@@ -74,7 +74,8 @@ class ChangesService(private val project: Project) {
 
         WriteCommandAction.runWriteCommandAction(project) {
             coeditPlugin.lockHandler.disableHandler(change.filePath)
-            LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
+            LocalFileSystem.getInstance()
+                    .findFileByPath(coeditPlugin.myBasePath + File.separator + change.filePath)
                     ?.rename(project, change.newName)
         }
 

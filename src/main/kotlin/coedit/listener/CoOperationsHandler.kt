@@ -54,6 +54,17 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
             return false
         }
         val isDirectory = file.isDirectory
+        if (isDirectory) {
+            for (lockedFile in coeditPlugin.lockHandler.allLockedFiles()) {
+                if (coeditPlugin.lockHandler.locksInDir(lockedFile, LockState.LOCKED_FOR_EDIT)) {
+                    return true
+                }
+            }
+        } else {
+            if (coeditPlugin.lockHandler.stateOf(relativePath) == LockState.LOCKED_FOR_EDIT) {
+                return true
+            }
+        }
 
         coeditPlugin.lockHandler.lockByMe(relativePath)
         val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileRename(relativePath, newName, isDirectory))

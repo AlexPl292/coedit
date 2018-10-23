@@ -7,20 +7,13 @@ import coedit.connection.protocol.CoRequestFileRename
 import coedit.listener.ChangeListener
 import coedit.model.LockHandler
 import coedit.model.LockState
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileOperationsHandler
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.newvfs.BulkFileListener
-import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
-import com.intellij.openapi.vfs.newvfs.events.VFileEvent
-import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
 import com.intellij.util.ThrowableConsumer
-import com.intellij.util.messages.MessageBusConnection
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -34,12 +27,11 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
     val myConn: CoeditConnection = CoeditConnection()
     val myBasePath = myProject.basePath ?: throw RuntimeException("Cannot detect base path of project")
     val lockHandler = LockHandler(myProject, myBasePath)
-    private lateinit var messageBusConnection: MessageBusConnection
 
     val editing: AtomicBoolean = AtomicBoolean(false)
 
     // Very simple implementation of .ignore. Ignore files and dirs if path returns true on startsWith
-    val coIgnore = listOf(".idea")
+    private val coIgnore = listOf(".idea")
 
     companion object {
         fun getInstance(project: Project): CoeditPlugin {
@@ -62,10 +54,37 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
             }
 
             override fun createFile(dir: VirtualFile?, name: String?): Boolean {
+                if (dir == null) {
+                    throw RuntimeException("IntelliJ IDEA error. Cannot get deleted file")
+                }
+                val relativePath = Utils.getRelativePath(dir.path, myProject)
+                if (lockHandler.handleDisabledAndReset(relativePath) || isIgnored(relativePath)) {
+                    return false
+                }
+                if (lockHandler.stateOf(relativePath) == null) {
+                    myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, false))
+                }
                 return false
             }
 
             override fun rename(file: VirtualFile?, newName: String?): Boolean {
+                if (file == null || newName == null) {
+                    throw RuntimeException("IntelliJ IDEA error. Cannot get deleted file")
+                }
+                val relativePath = Utils.getRelativePath(file.path, myProject)
+                if (lockHandler.handleDisabledAndReset(relativePath) || isIgnored(relativePath)) {
+                    return false
+                }
+                val isDirectory = file.isDirectory
+
+                lockHandler.lockByMe(relativePath)
+                val response = myConn.sendAndWaitForResponse(CoRequestFileRename(relativePath, newName, isDirectory))
+
+                if (response.code != 200) {
+                    lockHandler.unlock(relativePath)
+                    return true
+                }
+                lockHandler.unlock(relativePath)
                 return false
             }
 
@@ -78,6 +97,16 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
             }
 
             override fun createDirectory(dir: VirtualFile?, name: String?): Boolean {
+                if (dir == null) {
+                    throw RuntimeException("IntelliJ IDEA error. Cannot get deleted file")
+                }
+                val relativePath = Utils.getRelativePath(dir.path, myProject)
+                if (lockHandler.handleDisabledAndReset(relativePath) || isIgnored(relativePath)) {
+                    return false
+                }
+                if (lockHandler.stateOf(relativePath) == null) {
+                    myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, true))
+                }
                 return false
             }
 
@@ -115,33 +144,9 @@ class CoeditPlugin(private val myProject: Project) : ProjectComponent {
             }
 
         })
-        messageBusConnection = ApplicationManager.getApplication().messageBus.connect()
-        messageBusConnection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
-            override fun before(events: MutableList<out VFileEvent>) {
-                events.forEach {
-                    val relativePath = Utils.getRelativePath(it.path, myProject)
-                    if (lockHandler.handleDisabledAndReset(relativePath) || isIgnored(relativePath)) {
-                        return
-                    }
-                    if (it is VFileCreateEvent) {
-                        if (lockHandler.stateOf(relativePath) == null) {
-                            myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, it.isDirectory))
-                        }
-                    } else if (it is VFilePropertyChangeEvent && it.propertyName == "name") {
-                        val newName = it.newValue as String
-                        val isDirectory = it.file.isDirectory
-
-                        myConn.sendAndWaitForResponse(CoRequestFileRename(relativePath, newName, isDirectory))
-                    }
-                }
-            }
-        })
     }
 
     fun disconnectMessageBus() {
         EditorFactory.getInstance().eventMulticaster.removeDocumentListener(ChangeListener(myProject))
-        if (this::messageBusConnection.isInitialized) {
-            messageBusConnection.disconnect()
-        }
     }
 }

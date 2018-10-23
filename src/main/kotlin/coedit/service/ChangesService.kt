@@ -67,7 +67,7 @@ class ChangesService(private val project: Project) {
     private fun renameFile(change: CoRequestFileRename): CoResponse {
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
-        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath, LockState.LOCKED_BY_ME)) {
+        if (change.isDirectory && coeditPlugin.lockHandler.locksInDir(change.filePath, LockState.LOCKED_BY_ME) || !change.isDirectory && coeditPlugin.lockHandler.stateOf(change.filePath) == LockState.LOCKED_BY_ME) {
             return CoResponse.CANNOT_CHANGE_FILE_LOCKED(change.filePath)
         }
 

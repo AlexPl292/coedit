@@ -52,7 +52,7 @@ class Utils {
 
             log.debug("Unlock files...")
             coeditPlugin.lockHandler.allLockedFiles().forEach {
-                val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)?.findChild(it)
+                val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)?.findFileByRelativePath(it)
                 if (file != null) {
                     ApplicationManager.getApplication().runReadAction {
                         Utils.removeAllGuardedBlocks(file)

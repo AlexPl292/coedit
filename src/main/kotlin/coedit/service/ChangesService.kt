@@ -84,7 +84,7 @@ class ChangesService(private val project: Project) {
         val parentPath = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)
                 ?: return CoResponse.CANNOT_GET_FILE(coeditPlugin.myBasePath)
 
-        val newFile = parentPath.findChild(change.filePath)
+        val newFile = parentPath.findFileByRelativePath(change.filePath)
                 ?: return CoResponse.CANNOT_GET_FILE(change.filePath)
 
         WriteCommandAction.runWriteCommandAction(project) {

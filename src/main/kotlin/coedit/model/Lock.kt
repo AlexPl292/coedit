@@ -45,7 +45,7 @@ class LockHandler(val project: Project, private val basePath: String) {
      * File will be **not** locked if it's already locked by me
      */
     fun lockForEdit(filePath: String): Status {
-        val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
+        val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findFileByRelativePath(filePath)
                 ?: return Status.CANNOT_GET_FILE
 
         ApplicationManager.getApplication().runReadAction {
@@ -97,7 +97,7 @@ class LockHandler(val project: Project, private val basePath: String) {
 
     fun unlock(filePath: String): Boolean {
         val status = locks.remove(filePath)
-        val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findChild(filePath)
+        val file = LocalFileSystem.getInstance().findFileByPath(basePath)?.findFileByRelativePath(filePath)
                 ?: return false
 
         ApplicationManager.getApplication().runReadAction {

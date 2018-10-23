@@ -27,6 +27,7 @@ class ChangesService(private val project: Project) {
             is CoRequestFileRename -> renameFile(change)
             else -> CoResponse.ERROR
         }
+        response.requestUuid = change.requestUuid
         val coeditPlugin = CoeditPlugin.getInstance(project)
         coeditPlugin.myConn.response(response)
     }

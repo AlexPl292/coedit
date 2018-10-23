@@ -3,6 +3,7 @@ package coedit
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.impl.DocumentImpl
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -35,10 +36,8 @@ class Utils {
 
         fun removeAllGuardedBlocks(document: Document) {
             ApplicationManager.getApplication().runReadAction {
-                while (true) {
-                    // Well, I have no idea, how can I get all guard blocks in another way
-                    val guard = document.getRangeGuard(0, document.textLength) ?: break
-                    document.removeGuardedBlock(guard)
+                if (document is DocumentImpl) {
+                    document.guardedBlocks.forEach { document.removeGuardedBlock(it) }
                 }
             }
         }

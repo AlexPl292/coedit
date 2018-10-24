@@ -10,6 +10,9 @@ import coedit.model.LockState
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileOperationsHandler
 import com.intellij.openapi.vfs.VirtualFile
@@ -35,7 +38,13 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
             return false
         }
         if (coeditPlugin.lockHandler.stateOf(relativePath) == null) {
-            val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, false))
+            val task = object : Task.WithResult<CoResponse, RuntimeException>(project, "Create file", false) {
+                override fun compute(indicator: ProgressIndicator): CoResponse {
+                    return coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, false))
+                }
+            }
+            ProgressManager.getInstance().run(task)
+            val response = task.result
             if (response.code != CoResponse.OK.code) {
                 Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot create file. Response $response", NotificationType.ERROR))
                 return true
@@ -68,7 +77,13 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
         }
 
         coeditPlugin.lockHandler.lockByMe(relativePath)
-        val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileRename(relativePath, newName, isDirectory))
+        val task = object : Task.WithResult<CoResponse, RuntimeException>(project, "Rename file", false) {
+            override fun compute(indicator: ProgressIndicator): CoResponse {
+                return coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileRename(relativePath, newName, isDirectory))
+            }
+        }
+        ProgressManager.getInstance().run(task)
+        val response = task.result
 
         if (response.code != CoResponse.OK.code) {
             Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot rename file. Response $response", NotificationType.ERROR))
@@ -98,7 +113,13 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
             return false
         }
         if (coeditPlugin.lockHandler.stateOf(relativePath) == null) {
-            val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, true))
+            val task = object : Task.WithResult<CoResponse, RuntimeException>(project, "Create directory", false) {
+                override fun compute(indicator: ProgressIndicator): CoResponse {
+                    return coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileCreation(relativePath, true))
+                }
+            }
+            ProgressManager.getInstance().run(task)
+            val response = task.result
             if (response.code != CoResponse.OK.code) {
                 Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot create directory. Response $response", NotificationType.ERROR))
                 return true
@@ -134,7 +155,13 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
 
         coeditPlugin.lockHandler.lockByMe(relativePath)
 
-        val response = coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileDeletion(relativePath, isDirectory))
+        val task = object : Task.WithResult<CoResponse, RuntimeException>(project, "Delete file", false) {
+            override fun compute(indicator: ProgressIndicator): CoResponse {
+                return coeditPlugin.myConn.sendAndWaitForResponse(CoRequestFileDeletion(relativePath, isDirectory))
+            }
+        }
+        ProgressManager.getInstance().run(task)
+        val response = task.result
         if (response.code != CoResponse.OK.code) {
             Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot delete file. Response $response", NotificationType.ERROR))
             coeditPlugin.lockHandler.unlock(relativePath)

@@ -108,19 +108,20 @@ class CoeditConnection {
             if (Thread.interrupted()) break
             log.debug("Wait for incoming requests")
             val request = objectInputStream.readObject()
-            log.debug("Got request. ", request)
+            log.debug("Read object from input stream.")
 
             if (Thread.interrupted()) break
 
             if (request is CoResponse) {
                 log.debug("Request is response")
                 if (request.requestUuid != null) {
-                    log.debug("Request has not null requestUUilt, ", request)
+                    log.debug("Request has not null requestUuid, ", request)
                     responseQueue.offer(request, 5, TimeUnit.SECONDS)
                     log.debug("Put response into queue")
                 }
                 continue
             }
+            log.debug("Got request. ", request)
             changesService.handleChange(request as CoRequest)
         }
     }

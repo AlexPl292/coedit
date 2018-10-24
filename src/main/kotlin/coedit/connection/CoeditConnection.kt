@@ -128,7 +128,7 @@ class CoeditConnection {
     fun sendAndWaitForResponse(request: CoRequest): CoResponse {
         request.requestUuid = UUID.randomUUID().toString()
         log.debug("Sending object. ", request)
-        objectOutputStream.writeObject(request)
+        objectOutputStream.writeUnshared(request)
 
         log.debug("Waiting for response...")
         var coResponse: CoResponse
@@ -151,7 +151,7 @@ class CoeditConnection {
     fun send(request: CoRequest) {
         log.debug("Sending object without waiting for response", request)
         request.requestUuid = null
-        objectOutputStream.writeObject(request)
+        objectOutputStream.writeUnshared(request)
     }
 
     fun response(response: CoResponse) {

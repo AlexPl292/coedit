@@ -113,8 +113,11 @@ class CoeditConnection {
             if (Thread.interrupted()) break
 
             if (request is CoResponse) {
+                log.debug("Request is response")
                 if (request.requestUuid != null) {
-                    responseQueue.put(request)
+                    log.debug("Request has not null requestUUilt, ", request)
+                    responseQueue.offer(request, 5, TimeUnit.SECONDS)
+                    log.debug("Put response into queue")
                 }
                 continue
             }
@@ -123,16 +126,18 @@ class CoeditConnection {
     }
 
     fun sendAndWaitForResponse(request: CoRequest): CoResponse {
-        log.debug("Sending object. ", request)
         request.requestUuid = UUID.randomUUID().toString()
+        log.debug("Sending object. ", request)
         objectOutputStream.writeObject(request)
 
         log.debug("Waiting for response...")
-        val coResponse = responseQueue.poll(5, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
-        if (coResponse.requestUuid != request.requestUuid) {
-            log.error("Response for wrong request")
-            return CoResponse.CONTINUE
-        }
+        var coResponse: CoResponse
+        do {
+            coResponse = responseQueue.poll(5, TimeUnit.SECONDS) ?: CoResponse.CONTINUE
+            if (coResponse.requestUuid == request.requestUuid) {
+                break
+            }
+        } while (coResponse != CoResponse.CONTINUE)
         log.debug("Got response. ", coResponse)
 
         if (coResponse == CoResponse.ERROR) {
@@ -152,7 +157,7 @@ class CoeditConnection {
     fun response(response: CoResponse) {
         log.debug("Response ", response)
         if (!myClientSocket.isClosed) {
-            objectOutputStream.writeObject(response)
+            objectOutputStream.writeUnshared(response)
         }
     }
 

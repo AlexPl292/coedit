@@ -40,6 +40,7 @@ class CoOperationsHandler(val project: Project) : LocalFileOperationsHandler {
                 Notifications.Bus.notify(Notification("CoEdit", "Error!", "Cannot create file. Response $response", NotificationType.ERROR))
                 return true
             }
+            return false
         }
         return false
     }

@@ -20,8 +20,6 @@ data class CoResponse(
         val OK = CoResponse(200, "OK")
         val LOCK_FILE_ALREADY_LOCKED = CoResponse(201, "File already locked")
 
-        val ERROR = CoResponse(500, "ERROR")
-
         fun CANNOT_GET_FILE(path: String): CoResponse = CoResponse(501, "Cannot get file. Path: $path")
 
         val CANNOT_LOCK_FILE_ALREADY_LOCKED = CoResponse(502, "Cannot lock file. This file is already locked")

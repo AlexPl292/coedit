@@ -6,7 +6,7 @@ import java.io.Serializable
  * Created by Alex Plate on 17.10.2018.
  */
 
-abstract class CoRequest(open var requestUuid: String?) : Serializable
+sealed class CoRequest(open var requestUuid: String?) : Serializable
 
 data class CoRequestFileCreation(
         val filePath: String,

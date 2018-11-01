@@ -141,11 +141,6 @@ class CoeditConnection {
         } while (coResponse != CoResponse.CONTINUE)
         log.debug("Got response. ", coResponse)
 
-        if (coResponse == CoResponse.ERROR) {
-            log.error("Error response from server")
-            Notifications.Bus.notify(Notification("CoEdit", "CoEdit", "Unhandled error on server", NotificationType.ERROR))
-        }
-
         return coResponse
     }
 

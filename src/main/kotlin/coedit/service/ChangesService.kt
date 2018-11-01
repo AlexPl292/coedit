@@ -25,7 +25,6 @@ class ChangesService(private val project: Project) {
             is CoRequestStopCollaboration -> stopCollaboration(change)
             is CoRequestFileDeletion -> deleteFile(change)
             is CoRequestFileRename -> renameFile(change)
-            else -> CoResponse.ERROR
         }
         response.requestUuid = change.requestUuid
         val coeditPlugin = CoeditPlugin.getInstance(project)

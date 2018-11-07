@@ -1,6 +1,6 @@
 package coedit.model
 
-import coedit.Utils
+import coedit.removeGuardedBlocks
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -105,7 +105,7 @@ class LockHandler(val project: Project, private val basePath: String) {
 
             if (document != null) {
                 if (status == LockState.LOCKED_FOR_EDIT) {
-                    Utils.removeAllGuardedBlocks(document)
+                    FileDocumentManager.getInstance().getDocument(file)?.removeGuardedBlocks()
                 }
             }
         }

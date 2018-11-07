@@ -7,7 +7,6 @@ import com.intellij.openapi.editor.impl.DocumentImpl
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFile
 import java.io.File
 
 /**
@@ -29,19 +28,6 @@ class Utils {
             return File(project.basePath).toURI().relativize(File(filePath).toURI()).path
         }
 
-        fun removeAllGuardedBlocks(file: VirtualFile) {
-            val document = FileDocumentManager.getInstance().getDocument(file) ?: return
-            removeAllGuardedBlocks(document)
-        }
-
-        fun removeAllGuardedBlocks(document: Document) {
-            ApplicationManager.getApplication().runReadAction {
-                if (document is DocumentImpl) {
-                    document.guardedBlocks.clear()
-                }
-            }
-        }
-
         fun stopWork(project: Project) {
             val coeditPlugin = CoeditPlugin.getInstance(project)
             coeditPlugin.editing.set(false)
@@ -55,10 +41,21 @@ class Utils {
                 val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)?.findFileByRelativePath(it)
                 if (file != null) {
                     ApplicationManager.getApplication().runReadAction {
-                        Utils.removeAllGuardedBlocks(file)
+                        FileDocumentManager.getInstance().getDocument(file)?.removeGuardedBlocks()
                     }
                 }
             }
+        }
+    }
+}
+
+fun Document.removeGuardedBlocks() {
+    if (this is DocumentImpl) {
+        this.guardedBlocks.clear()
+    } else {
+        while (true) {
+            val guard = this.getRangeGuard(0, this.textLength) ?: break
+            this.removeGuardedBlock(guard)
         }
     }
 }

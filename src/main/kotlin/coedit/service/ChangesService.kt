@@ -5,6 +5,7 @@ import coedit.Utils
 import coedit.connection.protocol.*
 import coedit.model.LockHandler
 import coedit.model.LockState
+import coedit.removeGuardedBlocks
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -93,7 +94,7 @@ class ChangesService(private val project: Project) {
             val document = FileDocumentManager.getInstance().getDocument(newFile)
             if (document != null && change.patch.offset + change.patch.oldLength <= document.textLength) {
                 document.replaceString(change.patch.offset, change.patch.offset + change.patch.oldLength, change.patch.newString)
-                Utils.removeAllGuardedBlocks(document)
+                document.removeGuardedBlocks()
                 document.createGuardedBlock(0, document.textLength)
             }
         }

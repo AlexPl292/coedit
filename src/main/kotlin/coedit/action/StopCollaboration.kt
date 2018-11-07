@@ -1,8 +1,8 @@
 package coedit.action
 
 import coedit.CoeditPlugin
-import coedit.Utils
 import coedit.connection.protocol.CoRequestStopCollaboration
+import coedit.stopWork
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.diagnostic.Logger
@@ -20,7 +20,7 @@ class StopCollaboration : AnAction("StopCollaboration") {
         val coeditPlugin = CoeditPlugin.getInstance(project)
         log.debug("Stop connection..")
         coeditPlugin.myConn.send(CoRequestStopCollaboration())
-        Utils.stopWork(project)
+        stopWork(project)
     }
 
     override fun update(e: AnActionEvent?) {

@@ -12,38 +12,33 @@ import java.io.File
 /**
  * Created by Alex Plate on 18.10.2018.
  */
-class Utils {
 
-    companion object {
+fun getRelativePath(document: Document, project: Project): String {
+    val file = FileDocumentManager.getInstance().getFile(document)
+            ?: throw RuntimeException("Cannot access document $document")
+    return getRelativePath(file.path, project)
+}
 
-        private val log = Logger.getInstance("#coedit.utils")
+fun getRelativePath(filePath: String, project: Project): String {
+    return File(project.basePath).toURI().relativize(File(filePath).toURI()).path
+}
 
-        fun getRelativePath(document: Document, project: Project): String {
-            val file = FileDocumentManager.getInstance().getFile(document)
-                    ?: throw RuntimeException("Cannot access document $document")
-            return getRelativePath(file.path, project)
-        }
+private val log = Logger.getInstance("#coedit.utils")
 
-        fun getRelativePath(filePath: String, project: Project): String {
-            return File(project.basePath).toURI().relativize(File(filePath).toURI()).path
-        }
+fun stopWork(project: Project) {
+    val coeditPlugin = CoeditPlugin.getInstance(project)
+    coeditPlugin.editing.set(false)
+    coeditPlugin.myConn.stopWork()
 
-        fun stopWork(project: Project) {
-            val coeditPlugin = CoeditPlugin.getInstance(project)
-            coeditPlugin.editing.set(false)
-            coeditPlugin.myConn.stopWork()
+    log.debug("Disconnect message bus..")
+    coeditPlugin.disconnectMessageBus()
 
-            log.debug("Disconnect message bus..")
-            coeditPlugin.disconnectMessageBus()
-
-            log.debug("Unlock files...")
-            coeditPlugin.lockHandler.allLockedFiles().forEach {
-                val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)?.findFileByRelativePath(it)
-                if (file != null) {
-                    ApplicationManager.getApplication().runReadAction {
-                        FileDocumentManager.getInstance().getDocument(file)?.removeGuardedBlocks()
-                    }
-                }
+    log.debug("Unlock files...")
+    coeditPlugin.lockHandler.allLockedFiles().forEach {
+        val file = LocalFileSystem.getInstance().findFileByPath(coeditPlugin.myBasePath)?.findFileByRelativePath(it)
+        if (file != null) {
+            ApplicationManager.getApplication().runReadAction {
+                FileDocumentManager.getInstance().getDocument(file)?.removeGuardedBlocks()
             }
         }
     }

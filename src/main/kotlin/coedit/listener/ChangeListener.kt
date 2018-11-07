@@ -1,11 +1,11 @@
 package coedit.listener
 
 import coedit.CoeditPlugin
-import coedit.Utils
 import coedit.connection.protocol.CoPatch
 import coedit.connection.protocol.CoRequestFileEdit
 import coedit.connection.protocol.CoRequestTryLock
 import coedit.connection.protocol.CoRequestUnlock
+import coedit.getRelativePath
 import coedit.model.LockState
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
@@ -23,7 +23,7 @@ class ChangeListener(private val project: Project) : DocumentListener, CoListene
             throw RuntimeException("IntelliJ IDEA error. Cannot get document event")
         }
 
-        val relativePath = Utils.getRelativePath(event.document, project)
+        val relativePath = getRelativePath(event.document, project)
         val coeditPlugin = CoeditPlugin.getInstance(project)
 
         val lockHandler = coeditPlugin.lockHandler

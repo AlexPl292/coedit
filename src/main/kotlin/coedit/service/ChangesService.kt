@@ -6,6 +6,7 @@ import coedit.connection.protocol.*
 import coedit.model.LockHandler
 import coedit.model.LockState
 import coedit.removeGuardedBlocks
+import coedit.stopWork
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -117,7 +118,7 @@ class ChangesService(private val project: Project) {
     }
 
     private fun stopCollaboration(change: CoRequestStopCollaboration): CoResponse {
-        Utils.stopWork(project)
+        stopWork(project)
         return CoResponse.OK
     }
 }

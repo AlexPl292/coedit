@@ -1,7 +1,6 @@
 package coedit.service
 
 import coedit.CoeditPlugin
-import coedit.Utils
 import coedit.connection.protocol.*
 import coedit.model.LockHandler
 import coedit.model.LockState

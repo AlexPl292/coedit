@@ -28,13 +28,18 @@
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
     <output-test url="file://$MODULE_DIR$/../../out/test/classes" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../src/test" />
+    <content url="file://$MODULE_DIR$/../../src/test">
+      <sourceFolder url="file://$MODULE_DIR$/../../src/test/kotlin" isTestSource="true" />
+    </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="coedit_main" />
     <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.51" level="project" />
     <orderEntry type="module-library">
       <library name="Gradle: com.jetbrains:ideaIC:2018.2.4">
+        <ANNOTATIONS>
+          <root url="jar://$MAVEN_REPOSITORY$/com/jetbrains/intellij/idea/ideaIU/2018.3.2/ideaIU-2018.3.2-annotations.zip!/" />
+        </ANNOTATIONS>
         <CLASSES>
           <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2018.2.4/4c76898b5283c541babf1c3179845a27edadccfc/ideaIC-2018.2.4/lib/common-io-3.3.2.jar!/" />
           <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.jetbrains.intellij.idea/ideaIC/2018.2.4/4c76898b5283c541babf1c3179845a27edadccfc/ideaIC-2018.2.4/lib/batik-all-1.10.jar!/" />
